@@ -1,0 +1,107 @@
+@model FerreteriaWeb.Models.Producto
+@{
+    ViewData["Title"] = "Editar Producto";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-9">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold text-dark mb-0"><i class="bi bi-pencil-square text-primary me-2"></i>Editar Producto</h3>
+                <small class="text-muted">Modifique los datos del producto (@Model.Codigo - @Model.Descripcion).</small>
+            </div>
+            <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+        </div>
+
+        <div class="card card-custom p-4">
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="StockActual" />
+                <input type="hidden" asp-for="CostoPromedio" />
+                <input type="hidden" asp-for="FechaRegistro" />
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label asp-for="Codigo" class="form-label fw-semibold"></label>
+                        <input asp-for="Codigo" class="form-control" />
+                        <span asp-validation-for="Codigo" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="CodigoBarras" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-upc-scan"></i></span>
+                            <input asp-for="CodigoBarras" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="CategoriaId" class="form-label fw-semibold">Categoría</label>
+                        <select asp-for="CategoriaId" class="form-select" asp-items="ViewBag.CategoriaId"></select>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Descripcion" class="form-label fw-semibold"></label>
+                        <input asp-for="Descripcion" class="form-control" />
+                        <span asp-validation-for="Descripcion" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="MarcaId" class="form-label fw-semibold">Marca</label>
+                        <select asp-for="MarcaId" class="form-select" asp-items="ViewBag.MarcaId"></select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="UnidadMedidaId" class="form-label fw-semibold">Unidad de Medida</label>
+                        <select asp-for="UnidadMedidaId" class="form-select" asp-items="ViewBag.UnidadMedidaId"></select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="UbicacionId" class="form-label fw-semibold">Ubicación</label>
+                        <select asp-for="UbicacionId" class="form-select" asp-items="ViewBag.UbicacionId">
+                            <option value="">-- Sin asignar --</option>
+                        </select>
+                    </div>
+
+                    <hr class="my-3 text-muted" />
+
+                    <div class="col-md-3">
+                        <label asp-for="PrecioCompra" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">S/</span>
+                            <input asp-for="PrecioCompra" class="form-control" type="number" step="0.01" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="PrecioVenta" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">S/</span>
+                            <input asp-for="PrecioVenta" class="form-control" type="number" step="0.01" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold text-muted">Stock Actual (Fijo)</label>
+                        <input class="form-control bg-light" value="@Model.StockActual" readonly />
+                        <small class="text-muted">Ajustar mediante Entradas / Salidas</small>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="StockMinimo" class="form-label fw-semibold"></label>
+                        <input asp-for="StockMinimo" class="form-control" type="number" step="0.01" />
+                    </div>
+
+                    <div class="col-12 text-end mt-4">
+                        <a asp-action="Index" class="btn btn-outline-secondary me-2">Cancelar</a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-save me-1"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

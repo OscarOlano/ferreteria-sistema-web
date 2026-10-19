@@ -1,0 +1,169 @@
+@model FerreteriaWeb.Services.RegistrarSalidaDto
+@{
+    ViewData["Title"] = "Registrar Salida de Mercadería";
+    var productos = (IEnumerable<dynamic>)ViewBag.ProductosJson;
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-10">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h3 class="fw-bold text-dark mb-0">
+                    <i class="bi bi-box-arrow-up-right text-danger me-2"></i>Despacho / Salida de Mercadería
+                </h3>
+                <small class="text-muted">Descuenta el stock inmediatamente y valida existencias para evitar inventario negativo.</small>
+            </div>
+            <a asp-action="Movimientos" class="btn btn-outline-secondary"><i class="bi bi-clock-history"></i> Historial</a>
+        </div>
+
+        <form asp-action="Salida" method="post" id="formSalida">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="All" class="alert alert-danger" style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
+
+            <!-- Datos del Despacho -->
+            <div class="card card-custom p-4 mb-4">
+                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">1. Datos del Despacho y Motivo</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Tipo de Salida</label>
+                        <select asp-for="TipoSalida" class="form-select">
+                            <option value="Venta / Despacho">Venta / Despacho a Cliente</option>
+                            <option value="Consumo Interno">Consumo Interno de la Empresa</option>
+                            <option value="Merma o Deterioro">Merma o Deterioro</option>
+                            <option value="Devolución a Proveedor">Devolución a Proveedor</option>
+                            <option value="Ajuste por Conteo Físico">Ajuste por Conteo Físico</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">N.° Boleta / Factura / Vale <span class="text-danger">*</span></label>
+                        <input asp-for="DocumentoReferencia" class="form-control" placeholder="Ej. B001-0009842" required />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Usuario Responsable</label>
+                        <input asp-for="Usuario" class="form-control bg-light" value="Almacenero" readonly />
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Observaciones / Cliente</label>
+                        <input asp-for="Motivo" class="form-control" placeholder="Ej. Despacho para obra Señor Juan Pérez / Contratista" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalle de Productos -->
+            <div class="card card-custom p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                    <h5 class="fw-bold text-dark mb-0">2. Artículos a Retirar</h5>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="btnAgregarFila">
+                        <i class="bi bi-plus-circle me-1"></i> Agregar Artículo
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 55%;">Producto</th>
+                                <th style="width: 20%;" class="text-center">Stock Disponible</th>
+                                <th style="width: 20%;" class="text-center">Cantidad a Retirar</th>
+                                <th style="width: 5%;" class="text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="filasContenedor">
+                            <tr class="fila-producto">
+                                <td>
+                                    <select name="Items[0].ProductoId" class="form-select select-producto" required>
+                                        <option value="">-- Seleccionar producto con stock --</option>
+                                        @foreach (var p in productos)
+                                        {
+                                            <option value="@p.id" data-stock="@p.stock">@p.codigo - @p.descripcion (Disp: @p.stock)</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary badge-stock fs-6 px-3 py-2">0</span>
+                                </td>
+                                <td>
+                                    <input type="number" name="Items[0].Cantidad" class="form-control text-center input-cantidad" step="0.01" min="0.01" value="1" required />
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-fila"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="text-end">
+                <a asp-action="Movimientos" class="btn btn-outline-secondary me-2">Cancelar</a>
+                <button type="submit" class="btn btn-danger px-5 py-2 fw-semibold">
+                    <i class="bi bi-check2-circle me-1"></i> Confirmar Salida de Almacén
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const productosData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ProductosJson));
+    let contadorFilas = 1;
+
+    document.getElementById('btnAgregarFila').addEventListener('click', function() {
+        const contenedor = document.getElementById('filasContenedor');
+        let optionsHtml = '<option value="">-- Seleccionar producto con stock --</option>';
+        productosData.forEach(p => {
+            optionsHtml += `<option value="${p.id}" data-stock="${p.stock}">${p.codigo} - ${p.descripcion} (Disp: ${p.stock})</option>`;
+        });
+
+        const nuevaFila = document.createElement('tr');
+        nuevaFila.className = 'fila-producto';
+        nuevaFila.innerHTML = `
+            <td>
+                <select name="Items[${contadorFilas}].ProductoId" class="form-select select-producto" required>
+                    ${optionsHtml}
+                </select>
+            </td>
+            <td class="text-center">
+                <span class="badge bg-secondary badge-stock fs-6 px-3 py-2">0</span>
+            </td>
+            <td>
+                <input type="number" name="Items[${contadorFilas}].Cantidad" class="form-control text-center input-cantidad" step="0.01" min="0.01" value="1" required />
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-fila"><i class="bi bi-trash"></i></button>
+            </td>
+        `;
+        contenedor.appendChild(nuevaFila);
+        contadorFilas++;
+        asignarEventosFila(nuevaFila);
+    });
+
+    function asignarEventosFila(row) {
+        const select = row.querySelector('.select-producto');
+        const badgeStock = row.querySelector('.badge-stock');
+        const inputCant = row.querySelector('.input-cantidad');
+        const btnEliminar = row.querySelector('.btn-eliminar-fila');
+
+        select.addEventListener('change', function() {
+            const selectedOpt = select.options[select.selectedIndex];
+            const stock = parseFloat(selectedOpt.getAttribute('data-stock')) || 0;
+            badgeStock.innerText = stock;
+            inputCant.max = stock;
+        });
+
+        btnEliminar.addEventListener('click', function() {
+            if (document.querySelectorAll('.fila-producto').length > 1) {
+                row.remove();
+            } else {
+                alert('Debe mantener al menos una fila de producto.');
+            }
+        });
+    }
+
+    document.querySelectorAll('.fila-producto').forEach(asignarEventosFila);
+</script>
+}

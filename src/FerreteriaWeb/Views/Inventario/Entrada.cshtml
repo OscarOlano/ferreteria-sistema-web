@@ -1,0 +1,195 @@
+@model FerreteriaWeb.Services.RegistrarEntradaDto
+@{
+    ViewData["Title"] = "Registrar Entrada de Mercadería";
+    var productos = (IEnumerable<dynamic>)ViewBag.ProductosJson;
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-10">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h3 class="fw-bold text-dark mb-0">
+                    <i class="bi bi-box-arrow-in-down text-success me-2"></i>Recepción de Mercadería / Entrada
+                </h3>
+                <small class="text-muted">Aumenta el stock en tiempo real y recalcula automáticamente el costo promedio ponderado.</small>
+            </div>
+            <a asp-action="Movimientos" class="btn btn-outline-secondary"><i class="bi bi-clock-history"></i> Historial</a>
+        </div>
+
+        <form asp-action="Entrada" method="post" id="formEntrada">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="All" class="alert alert-danger" style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
+
+            <!-- Datos del Comprobante / Proveedor -->
+            <div class="card card-custom p-4 mb-4">
+                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">1. Datos del Documento y Proveedor</h5>
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold">Proveedor</label>
+                        <select asp-for="ProveedorId" class="form-select" asp-items="ViewBag.Proveedores">
+                            <option value="">-- Seleccione Proveedor --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">N.° Factura / Guía de Remisión <span class="text-danger">*</span></label>
+                        <input asp-for="DocumentoReferencia" class="form-control" placeholder="Ej. F001-0004523" required />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Usuario Responsable</label>
+                        <input asp-for="Usuario" class="form-control bg-light" value="Administrador" readonly />
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Motivo u Observaciones</label>
+                        <input asp-for="Motivo" class="form-control" placeholder="Ej. Abastecimiento programado de materiales de construcción" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalle de Productos -->
+            <div class="card card-custom p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                    <h5 class="fw-bold text-dark mb-0">2. Detalle de Productos a Ingresar</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="btnAgregarFila">
+                        <i class="bi bi-plus-circle me-1"></i> Agregar Producto
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle" id="tablaDetalle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50%;">Producto</th>
+                                <th style="width: 20%;" class="text-center">Cantidad</th>
+                                <th style="width: 20%;" class="text-center">Costo Unit. (S/)</th>
+                                <th style="width: 10%;" class="text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="filasContenedor">
+                            <!-- Fila inicial por defecto -->
+                            <tr class="fila-producto">
+                                <td>
+                                    <select name="Items[0].ProductoId" class="form-select select-producto" required>
+                                        <option value="">-- Seleccionar producto --</option>
+                                        @foreach (var p in productos)
+                                        {
+                                            <option value="@p.id" data-precio="@p.precio">@p.codigo - @p.descripcion (Stock: @p.stock)</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" name="Items[0].Cantidad" class="form-control text-center input-cantidad" step="0.01" min="0.01" value="1" required />
+                                </td>
+                                <td>
+                                    <input type="number" name="Items[0].CostoUnitario" class="form-control text-center input-costo" step="0.01" min="0" value="0.00" required />
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-fila"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded-3 mt-3">
+                    <span class="fw-bold text-muted">Total de Artículos: <span id="lblTotalItems">1</span></span>
+                    <div>
+                        <span class="fw-semibold me-2">Total Estimado Entrada:</span>
+                        <span class="fs-4 fw-bold text-success" id="lblTotalMonto">S/ 0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-end">
+                <a asp-action="Movimientos" class="btn btn-outline-secondary me-2">Cancelar</a>
+                <button type="submit" class="btn btn-success px-5 py-2 fw-semibold">
+                    <i class="bi bi-check2-circle me-1"></i> Confirmar Entrada de Mercadería
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const productosData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ProductosJson));
+    let contadorFilas = 1;
+
+    function recalcularTotales() {
+        let total = 0;
+        let filas = document.querySelectorAll('.fila-producto');
+        document.getElementById('lblTotalItems').innerText = filas.length;
+
+        filas.forEach(row => {
+            const cant = parseFloat(row.querySelector('.input-cantidad').value) || 0;
+            const costo = parseFloat(row.querySelector('.input-costo').value) || 0;
+            total += cant * costo;
+        });
+        document.getElementById('lblTotalMonto').innerText = 'S/ ' + total.toFixed(2);
+    }
+
+    document.getElementById('btnAgregarFila').addEventListener('click', function() {
+        const contenedor = document.getElementById('filasContenedor');
+        let optionsHtml = '<option value="">-- Seleccionar producto --</option>';
+        productosData.forEach(p => {
+            optionsHtml += `<option value="${p.id}" data-precio="${p.precio}">${p.codigo} - ${p.descripcion} (Stock: ${p.stock})</option>`;
+        });
+
+        const nuevaFila = document.createElement('tr');
+        nuevaFila.className = 'fila-producto';
+        nuevaFila.innerHTML = `
+            <td>
+                <select name="Items[${contadorFilas}].ProductoId" class="form-select select-producto" required>
+                    ${optionsHtml}
+                </select>
+            </td>
+            <td>
+                <input type="number" name="Items[${contadorFilas}].Cantidad" class="form-control text-center input-cantidad" step="0.01" min="0.01" value="1" required />
+            </td>
+            <td>
+                <input type="number" name="Items[${contadorFilas}].CostoUnitario" class="form-control text-center input-costo" step="0.01" min="0" value="0.00" required />
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-fila"><i class="bi bi-trash"></i></button>
+            </td>
+        `;
+        contenedor.appendChild(nuevaFila);
+        contadorFilas++;
+        asignarEventosFila(nuevaFila);
+        recalcularTotales();
+    });
+
+    function asignarEventosFila(row) {
+        const select = row.querySelector('.select-producto');
+        const inputCosto = row.querySelector('.input-costo');
+        const inputCant = row.querySelector('.input-cantidad');
+        const btnEliminar = row.querySelector('.btn-eliminar-fila');
+
+        select.addEventListener('change', function() {
+            const selectedOpt = select.options[select.selectedIndex];
+            const precio = selectedOpt.getAttribute('data-precio');
+            if (precio) {
+                inputCosto.value = parseFloat(precio).toFixed(2);
+            }
+            recalcularTotales();
+        });
+
+        inputCant.addEventListener('input', recalcularTotales);
+        inputCosto.addEventListener('input', recalcularTotales);
+
+        btnEliminar.addEventListener('click', function() {
+            if (document.querySelectorAll('.fila-producto').length > 1) {
+                row.remove();
+                recalcularTotales();
+            } else {
+                alert('Debe mantener al menos una fila de producto.');
+            }
+        });
+    }
+
+    document.querySelectorAll('.fila-producto').forEach(asignarEventosFila);
+    recalcularTotales();
+</script>
+}

@@ -1,0 +1,59 @@
+@model FerreteriaWeb.Models.Proveedor
+@{
+    ViewData["Title"] = "Nuevo Proveedor";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold text-dark mb-0"><i class="bi bi-truck text-warning me-2"></i>Registrar Proveedor</h3>
+                <small class="text-muted">Ingrese la información fiscal y de contacto del proveedor.</small>
+            </div>
+            <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+        </div>
+
+        <div class="card card-custom p-4">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label asp-for="Ruc" class="form-label fw-semibold"></label>
+                        <input asp-for="Ruc" class="form-control" maxlength="11" placeholder="Ej. 20100010724" />
+                        <span asp-validation-for="Ruc" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-7">
+                        <label asp-for="RazonSocial" class="form-label fw-semibold"></label>
+                        <input asp-for="RazonSocial" class="form-control" placeholder="Ej. Distribuidora Ferretera del Norte S.A.C." />
+                        <span asp-validation-for="RazonSocial" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Telefono" class="form-label fw-semibold"></label>
+                        <input asp-for="Telefono" class="form-control" placeholder="Ej. 01-3176000 o 976123456" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Email" class="form-label fw-semibold"></label>
+                        <input asp-for="Email" class="form-control" type="email" placeholder="ventas@proveedor.pe" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Direccion" class="form-label fw-semibold"></label>
+                        <input asp-for="Direccion" class="form-control" placeholder="Av. Principal 123, Ciudad" />
+                    </div>
+
+                    <div class="col-12 text-end mt-4">
+                        <a asp-action="Index" class="btn btn-outline-secondary me-2">Cancelar</a>
+                        <button type="submit" class="btn btn-brand px-4">
+                            <i class="bi bi-save me-1"></i> Guardar Proveedor
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

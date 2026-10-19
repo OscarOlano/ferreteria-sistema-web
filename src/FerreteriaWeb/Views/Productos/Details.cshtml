@@ -1,0 +1,87 @@
+@model FerreteriaWeb.Models.Producto
+@{
+    ViewData["Title"] = "Detalle de Producto";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold text-dark mb-0"><i class="bi bi-info-circle text-info me-2"></i>Ficha Técnica del Producto</h3>
+                <small class="text-muted">Información detallada, parámetros de stock y valorización.</small>
+            </div>
+            <div class="d-flex gap-2">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary"><i class="bi bi-pencil"></i> Editar</a>
+                <a asp-controller="Inventario" asp-action="Kardex" asp-route-productoId="@Model.Id" class="btn btn-warning"><i class="bi bi-journal-text"></i> Ver Kárdex</a>
+                <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+            </div>
+        </div>
+
+        <div class="card card-custom p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
+                <div>
+                    <span class="badge bg-secondary mb-1">@Model.Codigo</span>
+                    <h4 class="fw-bold text-dark mb-1">@Model.Descripcion</h4>
+                    <span class="text-muted"><i class="bi bi-upc-scan"></i> Código de Barras: @(Model.CodigoBarras ?? "No asignado")</span>
+                </div>
+                <div class="text-end">
+                    <span class="badge @(Model.StockActual <= Model.StockMinimo ? "bg-warning text-dark" : "bg-success") fs-5 px-3 py-2">
+                        @Model.StockActual.ToString("G29") @Model.UnidadMedida?.Abreviatura
+                    </span>
+                    <div class="small text-muted mt-1">Stock Actual</div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-sm-6 col-md-4">
+                    <span class="text-muted small">Categoría</span>
+                    <div class="fw-semibold">@(Model.Categoria?.Nombre ?? "N/A")</div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <span class="text-muted small">Marca</span>
+                    <div class="fw-semibold">@(Model.Marca?.Nombre ?? "N/A")</div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <span class="text-muted small">Unidad de Medida</span>
+                    <div class="fw-semibold">@Model.UnidadMedida?.Nombre (@Model.UnidadMedida?.Abreviatura)</div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <span class="text-muted small">Ubicación en Almacén</span>
+                    <div class="fw-semibold text-primary">
+                        <i class="bi bi-geo-alt"></i> @(Model.Ubicacion?.CodigoCompleto ?? "Sin ubicación")
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <span class="text-muted small">Stock Mínimo (Alerta)</span>
+                    <div class="fw-semibold text-danger">@Model.StockMinimo @Model.UnidadMedida?.Abreviatura</div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <span class="text-muted small">Stock Máximo</span>
+                    <div class="fw-semibold">@Model.StockMaximo @Model.UnidadMedida?.Abreviatura</div>
+                </div>
+
+                <div class="col-12"><hr class="my-2 text-muted" /></div>
+
+                <div class="col-sm-6 col-md-4">
+                    <span class="text-muted small">Último Precio Compra</span>
+                    <div class="fw-bold fs-5 text-dark">S/ @Model.PrecioCompra.ToString("N2")</div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <span class="text-muted small">Precio Venta Sugerido</span>
+                    <div class="fw-bold fs-5 text-success">S/ @Model.PrecioVenta.ToString("N2")</div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <span class="text-muted small">Costo Promedio Ponderado</span>
+                    <div class="fw-bold fs-5 text-primary">S/ @Model.CostoPromedio.ToString("N4")</div>
+                </div>
+
+                <div class="col-12">
+                    <div class="p-3 bg-light rounded-3 d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold">Valor Total del Stock en Inventario:</span>
+                        <span class="fw-bold fs-4 text-dark">S/ @Model.ValorTotalInventario.ToString("N2")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

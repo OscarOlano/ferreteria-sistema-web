@@ -1,0 +1,73 @@
+@model IEnumerable<FerreteriaWeb.Models.Movimiento>
+@{
+    ViewData["Title"] = "Historial de Movimientos";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="h3 fw-bold text-dark mb-1">
+            <i class="bi bi-clock-history text-secondary me-2"></i>Historial de Movimientos
+        </h2>
+        <p class="text-muted mb-0">Registro y trazabilidad de todas las operaciones de entrada y salida realizadas en el almacén.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Entrada" class="btn btn-sm btn-success"><i class="bi bi-box-arrow-in-down"></i> Entrada</a>
+        <a asp-action="Salida" class="btn btn-sm btn-danger"><i class="bi bi-box-arrow-up-right"></i> Salida</a>
+    </div>
+</div>
+
+<div class="card card-custom">
+    <div class="table-responsive">
+        <table class="table table-custom table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>N.° Operación</th>
+                    <th>Tipo</th>
+                    <th>Fecha y Hora</th>
+                    <th>Documento Ref.</th>
+                    <th>Proveedor / Detalle</th>
+                    <th>Usuario</th>
+                    <th class="text-end">Monto Total</th>
+                    <th class="text-center">Artículos</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var m in Model)
+                    {
+                        <tr>
+                            <td class="fw-bold text-muted">#@m.Id.ToString("00000")</td>
+                            <td>
+                                <span class="badge @(m.Tipo == FerreteriaWeb.Models.TipoMovimiento.Entrada ? "bg-success" : "bg-danger")">
+                                    <i class="bi @(m.Tipo == FerreteriaWeb.Models.TipoMovimiento.Entrada ? "bi-box-arrow-in-down" : "bi-box-arrow-up-right") me-1"></i>
+                                    @m.Tipo
+                                </span>
+                            </td>
+                            <td>@m.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="fw-semibold text-dark">@m.DocumentoReferencia</td>
+                            <td>
+                                <div>@(m.Proveedor?.RazonSocial ?? m.Motivo ?? "Sin especificar")</div>
+                                @if (m.Proveedor != null && !string.IsNullOrEmpty(m.Motivo))
+                                {
+                                    <small class="text-muted">@m.Motivo</small>
+                                }
+                            </td>
+                            <td><span class="badge bg-light text-dark border">@m.Usuario</span></td>
+                            <td class="text-end fw-bold text-dark">S/ @m.MontoTotal.ToString("N2")</td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary rounded-pill">@m.Detalles.Count item(s)</span>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">No se registran movimientos.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

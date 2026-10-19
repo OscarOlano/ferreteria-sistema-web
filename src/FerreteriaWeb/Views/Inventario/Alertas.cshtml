@@ -1,0 +1,87 @@
+@model IEnumerable<FerreteriaWeb.Models.Producto>
+@{
+    ViewData["Title"] = "Alertas de Stock Mínimo";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="h3 fw-bold text-dark mb-1">
+            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Alertas de Reposición y Stock Mínimo
+        </h2>
+        <p class="text-muted mb-0">Artículos con inventario igual o inferior al punto de reorden configurado para evitar quiebres de stock.</p>
+    </div>
+    <a asp-action="Entrada" class="btn btn-success d-flex align-items-center gap-2">
+        <i class="bi bi-box-arrow-in-down"></i> Generar Orden / Entrada
+    </a>
+</div>
+
+<div class="card card-custom">
+    <div class="table-responsive">
+        <table class="table table-custom table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Estado</th>
+                    <th>Código</th>
+                    <th>Producto</th>
+                    <th>Categoría</th>
+                    <th>Ubicación</th>
+                    <th class="text-center">Stock Actual</th>
+                    <th class="text-center">Stock Mínimo</th>
+                    <th class="text-center">Déficit a Reponer</th>
+                    <th class="text-end">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        var deficit = item.StockMinimo - item.StockActual;
+                        <tr>
+                            <td>
+                                @if (item.StockActual <= 0)
+                                {
+                                    <span class="badge bg-danger">Agotado (0)</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">Bajo</span>
+                                }
+                            </td>
+                            <td class="fw-bold">@item.Codigo</td>
+                            <td>
+                                <div class="fw-semibold text-dark">@item.Descripcion</div>
+                                <small class="text-muted">@item.Marca?.Nombre</small>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">@item.Categoria?.Nombre</span></td>
+                            <td><i class="bi bi-geo-alt text-secondary"></i> @(item.Ubicacion?.CodigoCompleto ?? "Sin ubic.")</td>
+                            <td class="text-center fw-bold @(item.StockActual <= 0 ? "text-danger" : "text-warning") fs-6">
+                                @item.StockActual.ToString("G29") @item.UnidadMedida?.Abreviatura
+                            </td>
+                            <td class="text-center text-muted">
+                                @item.StockMinimo.ToString("G29") @item.UnidadMedida?.Abreviatura
+                            </td>
+                            <td class="text-center text-danger fw-semibold">
+                                +@(deficit > 0 ? deficit.ToString("G29") : "1") @item.UnidadMedida?.Abreviatura
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Entrada" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-plus-circle"></i> Reponer
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9" class="text-center py-5 text-muted">
+                            <i class="bi bi-shield-check text-success fs-2"></i>
+                            <p class="mt-2 mb-0">¡Excelente! Ningún producto se encuentra por debajo de su stock mínimo.</p>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

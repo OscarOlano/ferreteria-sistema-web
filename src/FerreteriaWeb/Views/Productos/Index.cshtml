@@ -1,0 +1,149 @@
+@model IEnumerable<FerreteriaWeb.Models.Producto>
+@{
+    ViewData["Title"] = "Catálogo de Productos";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="h3 fw-bold text-dark mb-1">
+            <i class="bi bi-box-seam-fill text-warning me-2"></i>Catálogo de Productos
+        </h2>
+        <p class="text-muted mb-0">Gestión de artículos, códigos de barra, ubicaciones y precios de ferretería.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-brand d-flex align-items-center gap-2">
+        <i class="bi bi-plus-circle"></i> Nuevo Producto
+    </a>
+</div>
+
+<!-- Barra de Búsqueda y Filtros -->
+<div class="card card-custom p-3 mb-4">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-12 col-md-5">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                <input type="text" name="buscar" value="@ViewBag.Buscar" class="form-control border-start-0 ps-0" 
+                       placeholder="Buscar por código, nombre o código de barras...">
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+            <select name="categoriaId" class="form-select" asp-items="ViewBag.Categorias">
+                <option value="">-- Todas las categorías --</option>
+            </select>
+        </div>
+        <div class="col-12 col-sm-6 col-md-2">
+            <select name="estado" class="form-select">
+                <option value="">-- Todos los estados --</option>
+                <option value="normal" selected="@(ViewBag.Estado == "normal")">Stock Normal</option>
+                <option value="bajo" selected="@(ViewBag.Estado == "bajo")">Stock Bajo</option>
+                <option value="agotado" selected="@(ViewBag.Estado == "agotado")">Agotados</option>
+            </select>
+        </div>
+        <div class="col-12 col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-dark w-100 fw-semibold">Filtrar</button>
+            <a asp-action="Index" class="btn btn-outline-secondary" title="Limpiar"><i class="bi bi-x-lg"></i></a>
+        </div>
+    </form>
+</div>
+
+<!-- Listado de Productos -->
+<div class="card card-custom">
+    <div class="table-responsive">
+        <table class="table table-custom table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Descripción</th>
+                    <th>Categoría</th>
+                    <th>Ubicación</th>
+                    <th class="text-end">P. Compra</th>
+                    <th class="text-end">P. Venta</th>
+                    <th class="text-center">Stock</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-dark">@item.Codigo</div>
+                                @if (!string.IsNullOrEmpty(item.CodigoBarras))
+                                {
+                                    <small class="text-muted"><i class="bi bi-upc-scan"></i> @item.CodigoBarras</small>
+                                }
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-dark">@item.Descripcion</div>
+                                <small class="text-muted">Marca: @(item.Marca?.Nombre ?? "N/A")</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    @(item.Categoria?.Nombre ?? "General")
+                                </span>
+                            </td>
+                            <td>
+                                @if (item.Ubicacion != null)
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-geo-alt"></i> @item.Ubicacion.CodigoCompleto
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">Sin asignar</span>
+                                }
+                            </td>
+                            <td class="text-end text-muted">S/ @item.PrecioCompra.ToString("N2")</td>
+                            <td class="text-end fw-bold text-dark">S/ @item.PrecioVenta.ToString("N2")</td>
+                            <td class="text-center">
+                                @if (item.StockActual <= 0)
+                                {
+                                    <span class="badge bg-danger">Agotado (0)</span>
+                                }
+                                else if (item.StockActual <= item.StockMinimo)
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        @item.StockActual.ToString("G29") @item.UnidadMedida?.Abreviatura
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">
+                                        @item.StockActual.ToString("G29") @item.UnidadMedida?.Abreviatura
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-secondary" title="Detalle">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-primary" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-controller="Inventario" asp-action="Kardex" asp-route-productoId="@item.Id" class="btn btn-outline-warning" title="Kárdex">
+                                        <i class="bi bi-journal-text"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger" title="Desactivar">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-search fs-2"></i>
+                            <p class="mt-2 mb-0">No se encontraron productos con los criterios seleccionados.</p>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
