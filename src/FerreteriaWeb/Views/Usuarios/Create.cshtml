@@ -1,0 +1,72 @@
+@model FerreteriaWeb.Models.Usuario
+@{
+    ViewData["Title"] = "Registrar Nuevo Usuario";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h3 class="h4 fw-bold mb-1 text-dark">
+                    Registrar Nuevo Usuario
+                </h3>
+                <p class="text-secondary small mb-0">
+                    Cree una cuenta con credenciales protegidas con algoritmo PBKDF2 y rol de privilegios.
+                </p>
+            </div>
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                Volver a Usuarios
+            </a>
+        </div>
+
+        <div class="card card-custom p-4 border-0 shadow-sm">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="Nombres" class="form-label fw-semibold">Nombres</label>
+                        <input asp-for="Nombres" class="form-control" required />
+                        <span asp-validation-for="Nombres" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Apellidos" class="form-label fw-semibold">Apellidos</label>
+                        <input asp-for="Apellidos" class="form-control" required />
+                        <span asp-validation-for="Apellidos" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label fw-semibold">Correo Electrónico Institucional</label>
+                    <input asp-for="Email" type="email" class="form-control" placeholder="usuario@ferrealmacen.pe" required />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label asp-for="RolId" class="form-label fw-semibold">Rol Asignado</label>
+                        <select asp-for="RolId" asp-items="ViewBag.Roles" class="form-select" required>
+                            <option value="">-- Seleccionar Rol --</option>
+                        </select>
+                        <span asp-validation-for="RolId" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Contraseña Inicial</label>
+                        <input type="password" name="password" class="form-control" placeholder="Mínimo 6 caracteres" required />
+                    </div>
+                </div>
+
+                <div class="alert alert-light border small mb-4">
+                    La contraseña será protegida mediante derivación criptográfica <strong>PBKDF2-HMAC-SHA256</strong> con salting dinámico antes de almacenarse en la base de datos.
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="btn btn-light">Cancelar</a>
+                    <button type="submit" class="btn btn-brand px-4">
+                        Guardar Usuario
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

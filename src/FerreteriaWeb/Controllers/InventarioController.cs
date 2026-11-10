@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +9,7 @@ using FerreteriaWeb.Services;
 
 namespace FerreteriaWeb.Controllers
 {
+    [Authorize]
     public class InventarioController : Controller
     {
         private readonly FerreteriaDbContext _context;
@@ -18,7 +21,20 @@ namespace FerreteriaWeb.Controllers
             _inventarioService = inventarioService;
         }
 
+        private int GetCurrentUserId()
+        {
+            var idStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int.TryParse(idStr, out int userId);
+            return userId;
+        }
+
+        private string GetClientIp()
+        {
+            return HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+        }
+
         // ================= ENTRADA DE MERCADERÍA =================
+        [Authorize(Roles = "Administrador,Almacenero")]
         public async Task<IActionResult> Entrada()
         {
             await CargarCombosEntradaAsync();
@@ -26,6 +42,7 @@ namespace FerreteriaWeb.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Administrador,Almacenero")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Entrada(RegistrarEntradaDto dto)
         {
@@ -38,10 +55,11 @@ namespace FerreteriaWeb.Controllers
 
             dto.Items = dto.Items.Where(i => i.ProductoId > 0 && i.Cantidad > 0).ToList();
 
-            var resultado = await _inventarioService.RegistrarEntradaAsync(dto);
+            int userId = GetCurrentUserId();
+            var resultado = await _inventarioService.RegistrarEntradaAsync(dto, userId, GetClientIp());
             if (resultado.Exito)
             {
-                TempData["Mensaje"] = resultado.Mensaje;
+                TempData["SuccessMessage"] = resultado.Mensaje;
                 return RedirectToAction(nameof(Movimientos));
             }
 
@@ -51,6 +69,7 @@ namespace FerreteriaWeb.Controllers
         }
 
         // ================= SALIDA DE MERCADERÍA =================
+        [Authorize(Roles = "Administrador,Almacenero,Vendedor")]
         public async Task<IActionResult> Salida()
         {
             await CargarCombosSalidaAsync();
@@ -58,6 +77,7 @@ namespace FerreteriaWeb.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Administrador,Almacenero,Vendedor")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Salida(RegistrarSalidaDto dto)
         {
@@ -70,15 +90,52 @@ namespace FerreteriaWeb.Controllers
 
             dto.Items = dto.Items.Where(i => i.ProductoId > 0 && i.Cantidad > 0).ToList();
 
-            var resultado = await _inventarioService.RegistrarSalidaAsync(dto);
+            int userId = GetCurrentUserId();
+            var resultado = await _inventarioService.RegistrarSalidaAsync(dto, userId, GetClientIp());
             if (resultado.Exito)
             {
-                TempData["Mensaje"] = resultado.Mensaje;
+                TempData["SuccessMessage"] = resultado.Mensaje;
                 return RedirectToAction(nameof(Movimientos));
             }
 
             ModelState.AddModelError("", resultado.Mensaje);
             await CargarCombosSalidaAsync();
+            return View(dto);
+        }
+
+        // ================= AJUSTE DE INVENTARIO (CU-12) =================
+        [Authorize(Roles = "Administrador,Almacenero")]
+        [HttpGet]
+        public async Task<IActionResult> Ajuste()
+        {
+            ViewBag.Productos = await _context.Productos
+                .Where(p => p.Activo)
+                .OrderBy(p => p.Descripcion)
+                .ToListAsync();
+            return View(new RegistrarAjusteDto());
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Administrador,Almacenero")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Ajuste(RegistrarAjusteDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Productos = await _context.Productos.Where(p => p.Activo).OrderBy(p => p.Descripcion).ToListAsync();
+                return View(dto);
+            }
+
+            int userId = GetCurrentUserId();
+            var resultado = await _inventarioService.RegistrarAjusteAsync(dto, userId, GetClientIp());
+            if (resultado.Exito)
+            {
+                TempData["SuccessMessage"] = resultado.Mensaje;
+                return RedirectToAction(nameof(Movimientos));
+            }
+
+            ModelState.AddModelError("", resultado.Mensaje);
+            ViewBag.Productos = await _context.Productos.Where(p => p.Activo).OrderBy(p => p.Descripcion).ToListAsync();
             return View(dto);
         }
 
@@ -104,7 +161,6 @@ namespace FerreteriaWeb.Controllers
             }
             else if (productos.Any())
             {
-                // Por defecto muestra el primer producto
                 productoSeleccionado = productos.First();
                 ViewBag.ProductoId = new SelectList(productos, "Id", "Descripcion", productoSeleccionado.Id);
                 movimientosKardex = await _inventarioService.GetKardexByProductoAsync(productoSeleccionado.Id, desde, hasta);
@@ -125,7 +181,9 @@ namespace FerreteriaWeb.Controllers
         public async Task<IActionResult> Movimientos()
         {
             var movimientos = await _context.Movimientos
+                .Include(m => m.Usuario)
                 .Include(m => m.Proveedor)
+                .Include(m => m.OrdenCompra)
                 .Include(m => m.Detalles)
                     .ThenInclude(d => d.Producto)
                         .ThenInclude(p => p!.UnidadMedida)
@@ -139,6 +197,7 @@ namespace FerreteriaWeb.Controllers
         private async Task CargarCombosEntradaAsync()
         {
             ViewBag.Proveedores = new SelectList(await _context.Proveedores.Where(p => p.Activo).ToListAsync(), "Id", "RazonSocial");
+            ViewBag.OrdenesCompra = new SelectList(await _context.OrdenesCompra.Where(o => o.Estado == "Pendiente" || o.Estado == "Aprobada").ToListAsync(), "Id", "NumeroOrden");
             ViewBag.ProductosJson = await _context.Productos
                 .Where(p => p.Activo)
                 .Select(p => new { id = p.Id, codigo = p.Codigo, descripcion = p.Descripcion, precio = p.PrecioCompra, stock = p.StockActual })

@@ -1,0 +1,197 @@
+@model FerreteriaWeb.Models.RegistrarOrdenCompraDto
+@{
+    ViewData["Title"] = "Nueva Orden de Compra";
+    var productos = ViewBag.Productos as List<FerreteriaWeb.Models.Producto> ?? new();
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h3 class="h4 fw-bold mb-1 text-dark">
+                    Emitir Orden de Compra
+                </h3>
+                <p class="text-secondary small mb-0">
+                    Generación formal de pedido a proveedor ferretero para reabastecimiento programado.
+                </p>
+            </div>
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                Volver a Órdenes
+            </a>
+        </div>
+
+        <div class="card card-custom p-4 border-0 shadow-sm">
+            <form asp-action="Create" method="post" id="formOC">
+                @Html.AntiForgeryToken()
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label asp-for="ProveedorId" class="form-label fw-semibold">Proveedor Destinatario</label>
+                        <select asp-for="ProveedorId" asp-items="ViewBag.Proveedores" class="form-select" required>
+                            <option value="">-- Seleccionar Proveedor --</option>
+                        </select>
+                        <span asp-validation-for="ProveedorId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="FechaEsperada" class="form-label fw-semibold">Fecha Esperada de Entrega</label>
+                        <input asp-for="FechaEsperada" type="date" class="form-control" />
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Observaciones" class="form-label fw-semibold">Observaciones / Condiciones de Entrega</label>
+                        <input asp-for="Observaciones" class="form-control" placeholder="Ej. Entregar en Almacén Central Ventanilla de 8:00 a 16:00 hrs." />
+                    </div>
+                </div>
+
+                <!-- Detalle de Productos a Comprar -->
+                <div class="card bg-light border-0 p-3 mb-4 rounded">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-dark mb-0">Ítems de la Orden</h5>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="agregarFila()">
+                            + Agregar Producto
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered bg-white align-middle" id="tblItems">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 45%;">Producto</th>
+                                    <th style="width: 15%;" class="text-center">Cantidad</th>
+                                    <th style="width: 18%;" class="text-center">Precio Unit. (S/)</th>
+                                    <th style="width: 15%;" class="text-end">Subtotal (S/)</th>
+                                    <th style="width: 7%;" class="text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="filasDetalle">
+                                <tr class="item-row">
+                                    <td>
+                                        <select name="Detalles[0].ProductoId" class="form-select form-select-sm sel-prod" required onchange="productoCambiado(this)">
+                                            <option value="">-- Seleccionar producto --</option>
+                                            @foreach (var prod in productos)
+                                            {
+                                                <option value="@prod.Id" data-precio="@prod.PrecioCompra">@prod.Codigo - @prod.Descripcion</option>
+                                            }
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.01" min="0.01" name="Detalles[0].Cantidad" class="form-control form-control-sm text-center input-cant" value="1" required oninput="calcularFila(this)" />
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.01" min="0.01" name="Detalles[0].PrecioUnitario" class="form-control form-control-sm text-center input-precio" value="0.00" required oninput="calcularFila(this)" />
+                                    </td>
+                                    <td class="text-end fw-bold text-dark subtotal-cell">
+                                        S/ 0.00
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" onclick="eliminarFila(this)">Quitar</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Resumen de Costos -->
+                    <div class="row justify-content-end mt-2">
+                        <div class="col-md-5">
+                            <table class="table table-sm table-borderless text-end mb-0">
+                                <tr>
+                                    <td class="text-muted">Subtotal:</td>
+                                    <td class="fw-semibold" id="lblSubtotal">S/ 0.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">IGV (18%):</td>
+                                    <td class="fw-semibold" id="lblIgv">S/ 0.00</td>
+                                </tr>
+                                <tr class="border-top">
+                                    <td class="fw-bold fs-6">Total Orden:</td>
+                                    <td class="fw-bold fs-6 text-brand" id="lblTotal">S/ 0.00</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="btn btn-light">Cancelar</a>
+                    <button type="submit" class="btn btn-brand px-4">
+                        Emitir Orden de Compra
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var prodsData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(productos.Select(p => new { id = p.Id, codigo = p.Codigo, descripcion = p.Descripcion, precio = p.PrecioCompra })));
+        var filaIndex = 1;
+
+        function agregarFila() {
+            var tbody = document.getElementById('filasDetalle');
+            var optHtml = '<option value="">-- Seleccionar producto --</option>';
+            prodsData.forEach(function(p) {
+                optHtml += '<option value="' + p.id + '" data-precio="' + p.precio + '">' + p.codigo + ' - ' + p.descripcion + '</option>';
+            });
+
+            var tr = document.createElement('tr');
+            tr.className = 'item-row';
+            tr.innerHTML = '<td><select name="Detalles[' + filaIndex + '].ProductoId" class="form-select form-select-sm sel-prod" required onchange="productoCambiado(this)">' + optHtml + '</select></td>' +
+                '<td><input type="number" step="0.01" min="0.01" name="Detalles[' + filaIndex + '].Cantidad" class="form-control form-control-sm text-center input-cant" value="1" required oninput="calcularFila(this)" /></td>' +
+                '<td><input type="number" step="0.01" min="0.01" name="Detalles[' + filaIndex + '].PrecioUnitario" class="form-control form-control-sm text-center input-precio" value="0.00" required oninput="calcularFila(this)" /></td>' +
+                '<td class="text-end fw-bold text-dark subtotal-cell">S/ 0.00</td>' +
+                '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" onclick="eliminarFila(this)">Quitar</button></td>';
+
+            tbody.appendChild(tr);
+            filaIndex++;
+            recalcularTodo();
+        }
+
+        function eliminarFila(btn) {
+            var rows = document.querySelectorAll('.item-row');
+            if (rows.length > 1) {
+                btn.closest('tr').remove();
+                recalcularTodo();
+            } else {
+                alert('Debe mantener al menos un producto en la orden.');
+            }
+        }
+
+        function productoCambiado(sel) {
+            var row = sel.closest('tr');
+            var opt = sel.options[sel.selectedIndex];
+            var precio = parseFloat(opt.getAttribute('data-precio')) || 0;
+            var inputPrecio = row.querySelector('.input-precio');
+            inputPrecio.value = precio.toFixed(2);
+            calcularFila(inputPrecio);
+        }
+
+        function calcularFila(elem) {
+            var row = elem.closest('tr');
+            var cant = parseFloat(row.querySelector('.input-cant').value) || 0;
+            var precio = parseFloat(row.querySelector('.input-precio').value) || 0;
+            var sub = cant * precio;
+            row.querySelector('.subtotal-cell').innerText = 'S/ ' + sub.toFixed(2);
+            recalcularTodo();
+        }
+
+        function recalcularTodo() {
+            var rows = document.querySelectorAll('.item-row');
+            var total = 0;
+            rows.forEach(function(r) {
+                var cant = parseFloat(r.querySelector('.input-cant').value) || 0;
+                var precio = parseFloat(r.querySelector('.input-precio').value) || 0;
+                total += (cant * precio);
+            });
+
+            var subtotalNeto = total / 1.18;
+            var igv = total - subtotalNeto;
+
+            document.getElementById('lblSubtotal').innerText = 'S/ ' + subtotalNeto.toFixed(2);
+            document.getElementById('lblIgv').innerText = 'S/ ' + igv.toFixed(2);
+            document.getElementById('lblTotal').innerText = 'S/ ' + total.toFixed(2);
+        }
+    </script>
+}

@@ -7,7 +7,7 @@
     <div class="col-12 col-md-6">
         <div class="card card-custom p-4 border-danger">
             <div class="text-center mb-3">
-                <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                <div class="display-4 text-danger mb-2">⚠️</div>
                 <h4 class="fw-bold text-dark mt-2">¿Desactivar Proveedor?</h4>
                 <p class="text-muted small">El proveedor se marcará como inactivo para no perder la trazabilidad de las órdenes y entradas registradas.</p>
             </div>
@@ -31,7 +31,7 @@
                 <input type="hidden" asp-for="Id" />
                 <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
                 <button type="submit" class="btn btn-danger fw-semibold">
-                    <i class="bi bi-trash me-1"></i> Desactivar
+                    Desactivar
                 </button>
             </form>
         </div>

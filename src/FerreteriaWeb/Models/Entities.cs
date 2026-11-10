@@ -3,6 +3,62 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FerreteriaWeb.Models
 {
+    // ==========================================
+    // MÓDULO DE SEGURIDAD Y ACCESO (RBAC)
+    // ==========================================
+    public class Rol
+    {
+        public int Id { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        [Display(Name = "Rol")]
+        public string Nombre { get; set; } = string.Empty;
+
+        [StringLength(200)]
+        [Display(Name = "Descripción")]
+        public string? Descripcion { get; set; }
+
+        public virtual ICollection<Usuario> Usuarios { get; set; } = new List<Usuario>();
+    }
+
+    public class Usuario
+    {
+        public int Id { get; set; }
+
+        [Display(Name = "Rol")]
+        public int RolId { get; set; }
+        public virtual Rol? Rol { get; set; }
+
+        [Required(ErrorMessage = "El nombre es obligatorio.")]
+        [StringLength(100)]
+        public string Nombres { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Los apellidos son obligatorios.")]
+        [StringLength(100)]
+        public string Apellidos { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El correo electrónico es obligatorio.")]
+        [EmailAddress(ErrorMessage = "Formato de correo no válido.")]
+        [StringLength(100)]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(256)]
+        public string PasswordHash { get; set; } = string.Empty;
+
+        public bool Activo { get; set; } = true;
+
+        [Display(Name = "Fecha Creación")]
+        public DateTime FechaCreacion { get; set; } = DateTime.Now;
+
+        [NotMapped]
+        public string NombreCompleto => $"{Nombres} {Apellidos}";
+    }
+
+    // ==========================================
+    // TABLAS MAESTRAS DE CATÁLOGO Y ALMACÉN
+    // ==========================================
     public class Categoria
     {
         public int Id { get; set; }
@@ -83,6 +139,7 @@ namespace FerreteriaWeb.Models
         public bool Activo { get; set; } = true;
 
         public virtual ICollection<Producto> Productos { get; set; } = new List<Producto>();
+        public virtual ICollection<OrdenCompra> OrdenesCompra { get; set; } = new List<OrdenCompra>();
     }
 
     public class Almacen
@@ -209,6 +266,76 @@ namespace FerreteriaWeb.Models
         }
     }
 
+    // ==========================================
+    // MÓDULO DE ÓRDENES DE COMPRA (CU-06)
+    // ==========================================
+    public class OrdenCompra
+    {
+        public int Id { get; set; }
+
+        [Required]
+        [StringLength(20)]
+        [Display(Name = "N.° Orden")]
+        public string NumeroOrden { get; set; } = string.Empty;
+
+        [Display(Name = "Proveedor")]
+        public int ProveedorId { get; set; }
+        public virtual Proveedor? Proveedor { get; set; }
+
+        [Display(Name = "Usuario")]
+        public int UsuarioId { get; set; }
+        public virtual Usuario? Usuario { get; set; }
+
+        [Display(Name = "Fecha Emisión")]
+        public DateTime FechaEmision { get; set; } = DateTime.Now;
+
+        [Display(Name = "Fecha Esperada")]
+        public DateTime? FechaEsperada { get; set; }
+
+        [Required]
+        [StringLength(20)]
+        [Display(Name = "Estado")]
+        public string Estado { get; set; } = "Pendiente"; // Pendiente, Aprobada, Recibida, Anulada
+
+        [Column(TypeName = "decimal(14, 2)")]
+        [Display(Name = "Monto Total (S/)")]
+        public decimal MontoTotal { get; set; }
+
+        [StringLength(300)]
+        [Display(Name = "Observaciones")]
+        public string? Observaciones { get; set; }
+
+        public virtual ICollection<DetalleOrdenCompra> Detalles { get; set; } = new List<DetalleOrdenCompra>();
+    }
+
+    public class DetalleOrdenCompra
+    {
+        public int Id { get; set; }
+
+        public int OrdenCompraId { get; set; }
+        public virtual OrdenCompra? OrdenCompra { get; set; }
+
+        public int ProductoId { get; set; }
+        public virtual Producto? Producto { get; set; }
+
+        [Column(TypeName = "decimal(12, 2)")]
+        [Range(0.01, 9999999.99)]
+        [Display(Name = "Cantidad")]
+        public decimal Cantidad { get; set; }
+
+        [Column(TypeName = "decimal(12, 4)")]
+        [Range(0, 9999999.99)]
+        [Display(Name = "Precio Unitario (S/)")]
+        public decimal PrecioUnitario { get; set; }
+
+        [Column(TypeName = "decimal(14, 2)")]
+        [Display(Name = "Subtotal (S/)")]
+        public decimal Subtotal => Cantidad * PrecioUnitario;
+    }
+
+    // ==========================================
+    // MOVIMIENTOS Y KÁRDEX VALORIZADO
+    // ==========================================
     public enum TipoMovimiento
     {
         Entrada = 1,
@@ -235,13 +362,18 @@ namespace FerreteriaWeb.Models
         [Display(Name = "Motivo u Observación")]
         public string? Motivo { get; set; }
 
-        [StringLength(60)]
+        // Trazabilidad de Usuario por FK (Observación corregida)
         [Display(Name = "Usuario")]
-        public string Usuario { get; set; } = "Administrador";
+        public int UsuarioId { get; set; }
+        public virtual Usuario? Usuario { get; set; }
 
         [Display(Name = "Proveedor")]
         public int? ProveedorId { get; set; }
         public virtual Proveedor? Proveedor { get; set; }
+
+        [Display(Name = "Orden de Compra")]
+        public int? OrdenCompraId { get; set; }
+        public virtual OrdenCompra? OrdenCompra { get; set; }
 
         [Column(TypeName = "decimal(14, 2)")]
         [Display(Name = "Monto Total (S/)")]
@@ -285,7 +417,7 @@ namespace FerreteriaWeb.Models
         [Display(Name = "Fecha")]
         public DateTime Fecha { get; set; } = DateTime.Now;
 
-        [StringLength(30)]
+        [StringLength(50)]
         [Display(Name = "Operación")]
         public string Operacion { get; set; } = string.Empty;
 
@@ -318,12 +450,148 @@ namespace FerreteriaWeb.Models
         [Display(Name = "Saldo Cantidad")]
         public decimal SaldoCantidad { get; set; }
 
-        [Column(TypeName = "decimal(12, 4)")]
+        [Column(TypeName = "decimal(14, 4)")]
         [Display(Name = "Costo Promedio")]
         public decimal CostoPromedio { get; set; }
 
         [Column(TypeName = "decimal(14, 2)")]
         [Display(Name = "Saldo Total (S/)")]
         public decimal SaldoTotal { get; set; }
+    }
+
+    // ==========================================
+    // MÓDULO DE AUDITORÍA Y SEGURIDAD (CU-12)
+    // ==========================================
+    public class Auditoria
+    {
+        public int Id { get; set; }
+
+        public int? UsuarioId { get; set; }
+        public virtual Usuario? Usuario { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string UsuarioEmail { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(50)]
+        public string Accion { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(50)]
+        public string TablaAfectada { get; set; } = string.Empty;
+
+        public int? RegistroId { get; set; }
+
+        public string? Detalles { get; set; }
+
+        [StringLength(45)]
+        public string? DireccionIP { get; set; }
+
+        public DateTime Fecha { get; set; } = DateTime.Now;
+    }
+
+    // ==========================================
+    // VIEW MODELS Y DTOS
+    // ==========================================
+    public class LoginViewModel
+    {
+        [Required(ErrorMessage = "El correo electrónico es obligatorio.")]
+        [EmailAddress(ErrorMessage = "Ingrese un correo válido.")]
+        [Display(Name = "Correo Electrónico")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "La contraseña es obligatoria.")]
+        [DataType(DataType.Password)]
+        [Display(Name = "Contraseña")]
+        public string Password { get; set; } = string.Empty;
+
+        [Display(Name = "Recordar sesión")]
+        public bool RememberMe { get; set; }
+    }
+
+    public class DashboardViewModel
+    {
+        public decimal ValorTotalInventario { get; set; }
+        public int TotalProductos { get; set; }
+        public int ProductosStockBajo { get; set; }
+        public int MovimientosHoy { get; set; }
+        public int TotalOrdenesPendientes { get; set; }
+        public List<Producto> UltimosProductos { get; set; } = new();
+        public List<Producto> AlertasStock { get; set; } = new();
+        public List<Movimiento> UltimosMovimientos { get; set; } = new();
+        public Dictionary<string, int> ProductosPorCategoria { get; set; } = new();
+    }
+
+    public class RegistrarEntradaDto
+    {
+        [Display(Name = "N.° Documento / Guía Remisión / Factura")]
+        public string DocumentoReferencia { get; set; } = string.Empty;
+
+        [Display(Name = "Proveedor")]
+        public int? ProveedorId { get; set; }
+
+        [Display(Name = "Orden de Compra Asociada")]
+        public int? OrdenCompraId { get; set; }
+
+        public string? Motivo { get; set; }
+
+        public int UsuarioId { get; set; }
+
+        public List<DetalleItemDto> Items { get; set; } = new();
+    }
+
+    public class RegistrarSalidaDto
+    {
+        [Display(Name = "N.° Boleta / Factura / Vale Despacho")]
+        public string DocumentoReferencia { get; set; } = string.Empty;
+
+        [Display(Name = "Tipo de Salida")]
+        public string TipoSalida { get; set; } = "Venta"; // Venta, Merma, Devolución
+
+        public string? Motivo { get; set; }
+
+        public int UsuarioId { get; set; }
+
+        public List<DetalleItemDto> Items { get; set; } = new();
+    }
+
+    public class RegistrarAjusteDto
+    {
+        [Required]
+        [Display(Name = "Producto")]
+        public int ProductoId { get; set; }
+
+        [Required]
+        [Range(0, 9999999.99, ErrorMessage = "El stock físico no puede ser negativo.")]
+        [Display(Name = "Stock Físico Real (Auditado)")]
+        public decimal StockFisicoReal { get; set; }
+
+        [Required(ErrorMessage = "Debe indicar el motivo del ajuste.")]
+        [StringLength(200)]
+        [Display(Name = "Motivo de la Diferencia")]
+        public string MotivoAjuste { get; set; } = string.Empty; // Conteo físico, Merma, Rotura, Pérdida
+    }
+
+    public class RegistrarOrdenCompraDto
+    {
+        [Required(ErrorMessage = "Debe seleccionar un proveedor.")]
+        [Display(Name = "Proveedor")]
+        public int ProveedorId { get; set; }
+
+        [Display(Name = "Fecha Esperada de Entrega")]
+        public DateTime? FechaEsperada { get; set; }
+
+        [Display(Name = "Observaciones")]
+        public string? Observaciones { get; set; }
+
+        public List<DetalleItemDto> Items { get; set; } = new();
+    }
+
+    public class DetalleItemDto
+    {
+        public int ProductoId { get; set; }
+        public decimal Cantidad { get; set; }
+        public decimal CostoUnitario { get; set; }
     }
 }

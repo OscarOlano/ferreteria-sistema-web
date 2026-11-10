@@ -1,0 +1,90 @@
+@model IEnumerable<FerreteriaWeb.Models.Auditoria>
+@{
+    ViewData["Title"] = "Bitácora de Auditoría del Sistema";
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h3 class="h4 fw-bold mb-1 text-dark">
+            Bitácora de Auditoría y Trazabilidad
+        </h3>
+        <p class="text-secondary small mb-0">
+            Registro cronológico inmutable de operaciones críticas: autenticación, movimientos de stock, ajustes e impacto valorizado.
+        </p>
+    </div>
+    <div>
+        <span class="badge bg-dark px-3 py-2">
+            Monitoreo Activo RBAC
+        </span>
+    </div>
+</div>
+
+<div class="card card-custom border-0 shadow-sm overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover table-custom align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Fecha / Hora</th>
+                    <th>Usuario Responsable</th>
+                    <th>Acción</th>
+                    <th>Módulo / Tabla</th>
+                    <th>IP Origen</th>
+                    <th>Detalles de la Operación</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            No hay eventos de auditoría registrados.
+                        </td>
+                    </tr>
+                }
+                @foreach (var log in Model)
+                {
+                    <tr>
+                        <td class="text-nowrap small font-monospace">
+                            @log.Fecha.ToString("dd/MM/yyyy HH:mm:ss")
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">@(log.Usuario?.NombreCompleto ?? log.UsuarioEmail)</div>
+                            <span class="text-muted small">@log.UsuarioEmail</span>
+                        </td>
+                        <td>
+                            @if (log.Accion.Contains("LOGIN"))
+                            {
+                                <span class="badge bg-info text-dark px-2 py-1">@log.Accion</span>
+                            }
+                            else if (log.Accion.Contains("ENTRADA"))
+                            {
+                                <span class="badge bg-success px-2 py-1">@log.Accion</span>
+                            }
+                            else if (log.Accion.Contains("SALIDA"))
+                            {
+                                <span class="badge bg-danger px-2 py-1">@log.Accion</span>
+                            }
+                            else if (log.Accion.Contains("AJUSTE"))
+                            {
+                                <span class="badge bg-warning text-dark px-2 py-1">@log.Accion</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary px-2 py-1">@log.Accion</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">@log.TablaAfectada</span>
+                        </td>
+                        <td class="small text-muted font-monospace">
+                            @(log.DireccionIP ?? "-")
+                        </td>
+                        <td class="small text-secondary">
+                            @log.Detalles
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

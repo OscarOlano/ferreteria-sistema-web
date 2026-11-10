@@ -1,52 +1,112 @@
 using FerreteriaWeb.Models;
+using FerreteriaWeb.Services;
 
 namespace FerreteriaWeb.Data
 {
     public static class DbInitializer
     {
-        public static void Initialize(FerreteriaDbContext context)
+        public static void Initialize(FerreteriaDbContext context, IPasswordHasher hasher)
         {
+            // Asegura la creación del esquema
             context.Database.EnsureCreated();
 
-            if (context.Productos.Any())
+            if (context.Usuarios.Any())
             {
-                return; // Ya fue inicializada
+                return; // Base de datos ya poblada
             }
 
-            // 1. Almacén y Ubicaciones
+            // 1. Roles del Sistema (RBAC)
+            var rolAdmin = new Rol 
+            { 
+                Nombre = "Administrador", 
+                Descripcion = "Control total del sistema, configuración, compras, inventario, reportes y usuarios" 
+            };
+            var rolAlmacen = new Rol 
+            { 
+                Nombre = "Almacenero", 
+                Descripcion = "Gestión operativa de recepciones, despachos, transferencias, conteo físico y kárdex" 
+            };
+            var rolVendedor = new Rol 
+            { 
+                Nombre = "Vendedor", 
+                Descripcion = "Consulta de catálogo, precios, stock en tiempo real y emisión de solicitudes de salida" 
+            };
+
+            context.Roles.AddRange(rolAdmin, rolAlmacen, rolVendedor);
+            context.SaveChanges();
+
+            // 2. Usuarios del Sistema con Criptografía PBKDF2
+            var userAdmin = new Usuario
+            {
+                RolId = rolAdmin.Id,
+                Nombres = "Oscar Andre",
+                Apellidos = "Olano Cauchos",
+                Email = "admin@ferrealmacen.pe",
+                PasswordHash = hasher.HashPassword("Admin123*"),
+                Activo = true,
+                FechaCreacion = DateTime.Now
+            };
+
+            var userAlmacen = new Usuario
+            {
+                RolId = rolAlmacen.Id,
+                Nombres = "Jeremy Máximo",
+                Apellidos = "Guisado Arroyo",
+                Email = "almacen@ferrealmacen.pe",
+                PasswordHash = hasher.HashPassword("Almacen123*"),
+                Activo = true,
+                FechaCreacion = DateTime.Now
+            };
+
+            var userVendedor = new Usuario
+            {
+                RolId = rolVendedor.Id,
+                Nombres = "Luis Heraclio",
+                Apellidos = "Obregón Hidalgo",
+                Email = "vendedor@ferrealmacen.pe",
+                PasswordHash = hasher.HashPassword("Vendedor123*"),
+                Activo = true,
+                FechaCreacion = DateTime.Now
+            };
+
+            context.Usuarios.AddRange(userAdmin, userAlmacen, userVendedor);
+            context.SaveChanges();
+
+            // 3. Almacén Central (Ubicación corregida: Ventanilla, Callao)
             var almacenPrincipal = new Almacen
             {
-                Nombre = "Almacén Central Principal",
-                Direccion = "Av. San Martín 450, Cajamarca"
+                Nombre = "Almacén Central Ventanilla",
+                Direccion = "Av. Néstor Gambetta Km 14.5, Ventanilla, Callao"
             };
             context.Almacenes.Add(almacenPrincipal);
             context.SaveChanges();
 
+            // 4. Ubicaciones Físicas
             var ubicaciones = new List<Ubicacion>
             {
-                new() { AlmacenId = almacenPrincipal.Id, Pasillo = "A", Estante = "01", Nivel = "1" }, // Materiales pesados
-                new() { AlmacenId = almacenPrincipal.Id, Pasillo = "A", Estante = "02", Nivel = "1" },
+                new() { AlmacenId = almacenPrincipal.Id, Pasillo = "A", Estante = "01", Nivel = "1" }, // Cemento y áridos
+                new() { AlmacenId = almacenPrincipal.Id, Pasillo = "A", Estante = "02", Nivel = "1" }, // Fierro y acero
                 new() { AlmacenId = almacenPrincipal.Id, Pasillo = "B", Estante = "01", Nivel = "2" }, // Tuberías y gasfitería
-                new() { AlmacenId = almacenPrincipal.Id, Pasillo = "B", Estante = "02", Nivel = "3" },
-                new() { AlmacenId = almacenPrincipal.Id, Pasillo = "C", Estante = "01", Nivel = "2" }, // Electricidad
-                new() { AlmacenId = almacenPrincipal.Id, Pasillo = "D", Estante = "01", Nivel = "1" }, // Herramientas
-                new() { AlmacenId = almacenPrincipal.Id, Pasillo = "E", Estante = "01", Nivel = "1" }, // Pinturas
+                new() { AlmacenId = almacenPrincipal.Id, Pasillo = "B", Estante = "02", Nivel = "3" }, // Conexiones PVC
+                new() { AlmacenId = almacenPrincipal.Id, Pasillo = "C", Estante = "01", Nivel = "2" }, // Cables eléctricos
+                new() { AlmacenId = almacenPrincipal.Id, Pasillo = "D", Estante = "01", Nivel = "1" }, // Herramientas manuales
+                new() { AlmacenId = almacenPrincipal.Id, Pasillo = "E", Estante = "01", Nivel = "1" }, // Pinturas y solventes
             };
             context.Ubicaciones.AddRange(ubicaciones);
             context.SaveChanges();
 
-            // 2. Categorías
+            // 5. Categorías
             var catConstruccion = new Categoria { Nombre = "Construcción", Descripcion = "Materiales básicos estructurales y cementicios" };
             var catGasfiteria = new Categoria { Nombre = "Gasfitería", Descripcion = "Tuberías, conexiones y grifería" };
             var catElectricidad = new Categoria { Nombre = "Electricidad", Descripcion = "Cables, interruptores, canaletas e iluminación" };
             var catHerramientas = new Categoria { Nombre = "Herramientas", Descripcion = "Herramientas manuales y eléctricas" };
             var catPinturas = new Categoria { Nombre = "Pinturas y Acabados", Descripcion = "Pinturas, solventes, brochas y lijas" };
-            var catSeguridad = new Categoria { Nombre = "Seguridad Industrial", Descripcion = "EPP, cascos, guantes y lentes" };
+            var catSeguridad = new Categoria { Nombre = "Seguridad Industrial", Descripcion = "EPP, cascos, guantes y arneses" };
 
             context.Categorias.AddRange(catConstruccion, catGasfiteria, catElectricidad, catHerramientas, catPinturas, catSeguridad);
             context.SaveChanges();
 
-            // 3. Marcas
+            // 6. Marcas
             var marcas = new List<Marca>
             {
                 new() { Nombre = "Pacasmayo" },
@@ -62,7 +122,7 @@ namespace FerreteriaWeb.Data
             context.Marcas.AddRange(marcas);
             context.SaveChanges();
 
-            // 4. Unidades de Medida
+            // 7. Unidades de Medida
             var undBolsa = new UnidadMedida { Nombre = "Bolsa", Abreviatura = "BOL" };
             var undUnidad = new UnidadMedida { Nombre = "Unidad", Abreviatura = "UND" };
             var undMetro = new UnidadMedida { Nombre = "Metro", Abreviatura = "M" };
@@ -73,54 +133,52 @@ namespace FerreteriaWeb.Data
             context.UnidadesMedida.AddRange(undBolsa, undUnidad, undMetro, undKilo, undGalon, undCaja);
             context.SaveChanges();
 
-            // 5. Proveedores
-            var proveedores = new List<Proveedor>
+            // 8. Proveedores
+            var prov1 = new Proveedor
             {
-                new()
-                {
-                    Ruc = "20100010724",
-                    RazonSocial = "Cementos Pacasmayo S.A.A.",
-                    Telefono = "01-3176000",
-                    Email = "ventas@pacasmayo.com.pe",
-                    Direccion = "Calle La Colonia 150, Lima"
-                },
-                new()
-                {
-                    Ruc = "20370146994",
-                    RazonSocial = "Corporación Aceros Arequipa S.A.",
-                    Telefono = "01-5171800",
-                    Email = "contacto@acerosarequipa.pe",
-                    Direccion = "Av. Enrique Meiggs 297, Callao"
-                },
-                new()
-                {
-                    Ruc = "20100152430",
-                    RazonSocial = "Pavco Wavin Perú S.A.",
-                    Telefono = "01-6140000",
-                    Email = "pedidos@pavco.com.pe",
-                    Direccion = "Autopista Panamericana Sur Km 20.5, Villa El Salvador"
-                },
-                new()
-                {
-                    Ruc = "20100030598",
-                    RazonSocial = "Indeco S.A.",
-                    Telefono = "01-6148000",
-                    Email = "ventas@indeco.com.pe",
-                    Direccion = "Av. Elmer Faucett 3350, Callao"
-                },
-                new()
-                {
-                    Ruc = "20508934512",
-                    RazonSocial = "Distribuidora Ferretera Truper Perú S.A.C.",
-                    Telefono = "01-7193200",
-                    Email = "atencion@truper.pe",
-                    Direccion = "Av. Argentina 2850, Lima"
-                }
+                Ruc = "20100010724",
+                RazonSocial = "Cementos Pacasmayo S.A.A.",
+                Telefono = "01-3176000",
+                Email = "ventas@pacasmayo.com.pe",
+                Direccion = "Calle La Colonia 150, Lima"
             };
-            context.Proveedores.AddRange(proveedores);
+            var prov2 = new Proveedor
+            {
+                Ruc = "20370146994",
+                RazonSocial = "Corporación Aceros Arequipa S.A.",
+                Telefono = "01-5171800",
+                Email = "contacto@acerosarequipa.pe",
+                Direccion = "Av. Enrique Meiggs 297, Callao"
+            };
+            var prov3 = new Proveedor
+            {
+                Ruc = "20100152430",
+                RazonSocial = "Pavco Wavin Perú S.A.",
+                Telefono = "01-6140000",
+                Email = "pedidos@pavco.com.pe",
+                Direccion = "Panamericana Sur Km 20.5, Villa El Salvador"
+            };
+            var prov4 = new Proveedor
+            {
+                Ruc = "20100030598",
+                RazonSocial = "Indeco S.A.",
+                Telefono = "01-6148000",
+                Email = "ventas@indeco.com.pe",
+                Direccion = "Av. Separadora Industrial 1771, Ate, Lima"
+            };
+            var prov5 = new Proveedor
+            {
+                Ruc = "20508565571",
+                RazonSocial = "Truper Perú S.A.C.",
+                Telefono = "01-7195400",
+                Email = "atencion@truper.pe",
+                Direccion = "Av. El Sol 1100, San Juan de Lurigancho"
+            };
+
+            context.Proveedores.AddRange(prov1, prov2, prov3, prov4, prov5);
             context.SaveChanges();
 
-            // 6. Productos representativos
+            // 9. Catálogo de Productos
             var productos = new List<Producto>
             {
                 new()
@@ -137,7 +195,7 @@ namespace FerreteriaWeb.Data
                     StockActual = 120,
                     StockMinimo = 40,
                     StockMaximo = 500,
-                    CostoPromedio = 26.50m
+                    CostoPromedio = 26.5000m
                 },
                 new()
                 {
@@ -147,13 +205,13 @@ namespace FerreteriaWeb.Data
                     CategoriaId = catConstruccion.Id,
                     MarcaId = marcas[1].Id, // Aceros Arequipa
                     UnidadMedidaId = undUnidad.Id,
-                    UbicacionId = ubicaciones[0].Id,
+                    UbicacionId = ubicaciones[1].Id,
                     PrecioCompra = 38.00m,
                     PrecioVenta = 44.50m,
                     StockActual = 85,
                     StockMinimo = 30,
                     StockMaximo = 300,
-                    CostoPromedio = 38.00m
+                    CostoPromedio = 38.0000m
                 },
                 new()
                 {
@@ -161,7 +219,7 @@ namespace FerreteriaWeb.Data
                     CodigoBarras = "775123400103",
                     Descripcion = "Alambre Negro Recocido N.° 16 (kg)",
                     CategoriaId = catConstruccion.Id,
-                    MarcaId = marcas[1].Id,
+                    MarcaId = marcas[1].Id, // Aceros Arequipa
                     UnidadMedidaId = undKilo.Id,
                     UbicacionId = ubicaciones[1].Id,
                     PrecioCompra = 5.20m,
@@ -169,7 +227,7 @@ namespace FerreteriaWeb.Data
                     StockActual = 150,
                     StockMinimo = 50,
                     StockMaximo = 400,
-                    CostoPromedio = 5.20m
+                    CostoPromedio = 5.2000m
                 },
                 new()
                 {
@@ -182,31 +240,15 @@ namespace FerreteriaWeb.Data
                     UbicacionId = ubicaciones[2].Id,
                     PrecioCompra = 8.50m,
                     PrecioVenta = 11.90m,
-                    StockActual = 4, // Alerta: bajo stock
+                    StockActual = 4, // Stock crítico para alertas
                     StockMinimo = 25,
                     StockMaximo = 200,
-                    CostoPromedio = 8.50m
+                    CostoPromedio = 8.5000m
                 },
                 new()
                 {
                     Codigo = "PROD-005",
                     CodigoBarras = "775123400105",
-                    Descripcion = "Tubo PVC Desagüe 4\" x 3 m Pesado",
-                    CategoriaId = catGasfiteria.Id,
-                    MarcaId = marcas[2].Id,
-                    UnidadMedidaId = undUnidad.Id,
-                    UbicacionId = ubicaciones[2].Id,
-                    PrecioCompra = 24.00m,
-                    PrecioVenta = 32.00m,
-                    StockActual = 18,
-                    StockMinimo = 15,
-                    StockMaximo = 100,
-                    CostoPromedio = 24.00m
-                },
-                new()
-                {
-                    Codigo = "PROD-006",
-                    CodigoBarras = "775123400106",
                     Descripcion = "Cable Eléctrico Unipolar THW 14 AWG Rojo (m)",
                     CategoriaId = catElectricidad.Id,
                     MarcaId = marcas[3].Id, // Indeco
@@ -217,29 +259,13 @@ namespace FerreteriaWeb.Data
                     StockActual = 250,
                     StockMinimo = 100,
                     StockMaximo = 1000,
-                    CostoPromedio = 1.35m
+                    CostoPromedio = 1.3500m
                 },
                 new()
                 {
-                    Codigo = "PROD-007",
-                    CodigoBarras = "775123400107",
-                    Descripcion = "Interruptor Simple con Placa Blanco",
-                    CategoriaId = catElectricidad.Id,
-                    MarcaId = marcas[8].Id,
-                    UnidadMedidaId = undUnidad.Id,
-                    UbicacionId = ubicaciones[4].Id,
-                    PrecioCompra = 4.80m,
-                    PrecioVenta = 7.50m,
-                    StockActual = 6, // Alerta: bajo stock
-                    StockMinimo = 20,
-                    StockMaximo = 150,
-                    CostoPromedio = 4.80m
-                },
-                new()
-                {
-                    Codigo = "PROD-008",
-                    CodigoBarras = "775123400108",
-                    Descripcion = "Martillo de Uña Curva 16 oz Mango Fibra de Vidrio",
+                    Codigo = "PROD-006",
+                    CodigoBarras = "775123400106",
+                    Descripcion = "Martillo de Uña Curva 16 oz Mango Fibra",
                     CategoriaId = catHerramientas.Id,
                     MarcaId = marcas[4].Id, // Truper
                     UnidadMedidaId = undUnidad.Id,
@@ -249,28 +275,12 @@ namespace FerreteriaWeb.Data
                     StockActual = 14,
                     StockMinimo = 8,
                     StockMaximo = 50,
-                    CostoPromedio = 22.00m
+                    CostoPromedio = 22.0000m
                 },
                 new()
                 {
-                    Codigo = "PROD-009",
-                    CodigoBarras = "775123400109",
-                    Descripcion = "Huincha Métrica 5 m / 16 ft Cinta Ancha",
-                    CategoriaId = catHerramientas.Id,
-                    MarcaId = marcas[5].Id, // Stanley
-                    UnidadMedidaId = undUnidad.Id,
-                    UbicacionId = ubicaciones[5].Id,
-                    PrecioCompra = 14.50m,
-                    PrecioVenta = 21.00m,
-                    StockActual = 22,
-                    StockMinimo = 10,
-                    StockMaximo = 60,
-                    CostoPromedio = 14.50m
-                },
-                new()
-                {
-                    Codigo = "PROD-010",
-                    CodigoBarras = "775123400110",
+                    Codigo = "PROD-007",
+                    CodigoBarras = "775123400107",
                     Descripcion = "Pintura Látex Pato Blanco Galón",
                     CategoriaId = catPinturas.Id,
                     MarcaId = marcas[6].Id, // CPP
@@ -278,81 +288,150 @@ namespace FerreteriaWeb.Data
                     UbicacionId = ubicaciones[6].Id,
                     PrecioCompra = 36.00m,
                     PrecioVenta = 48.00m,
-                    StockActual = 30,
-                    StockMinimo = 12,
-                    StockMaximo = 100,
-                    CostoPromedio = 36.00m
-                },
-                new()
-                {
-                    Codigo = "PROD-011",
-                    CodigoBarras = "775123400111",
-                    Descripcion = "Brocha Cerda Rubia 2.5\"",
-                    CategoriaId = catPinturas.Id,
-                    MarcaId = marcas[4].Id,
-                    UnidadMedidaId = undUnidad.Id,
-                    UbicacionId = ubicaciones[6].Id,
-                    PrecioCompra = 4.20m,
-                    PrecioVenta = 6.50m,
-                    StockActual = 3, // Alerta: bajo stock
-                    StockMinimo = 15,
+                    StockActual = 18,
+                    StockMinimo = 10,
                     StockMaximo = 80,
-                    CostoPromedio = 4.20m
+                    CostoPromedio = 36.0000m
                 },
                 new()
                 {
-                    Codigo = "PROD-012",
-                    CodigoBarras = "775123400112",
-                    Descripcion = "Casco de Seguridad Tipo Jockey con Tafilete Blanco",
+                    Codigo = "PROD-008",
+                    CodigoBarras = "775123400108",
+                    Descripcion = "Casco de Seguridad Tipo Jockey Blanco 3M",
                     CategoriaId = catSeguridad.Id,
                     MarcaId = marcas[7].Id, // 3M
                     UnidadMedidaId = undUnidad.Id,
                     UbicacionId = ubicaciones[5].Id,
-                    PrecioCompra = 18.00m,
+                    PrecioCompra = 18.50m,
                     PrecioVenta = 26.00m,
-                    StockActual = 25,
-                    StockMinimo = 10,
-                    StockMaximo = 70,
-                    CostoPromedio = 18.00m
+                    StockActual = 2, // Stock crítico
+                    StockMinimo = 15,
+                    StockMaximo = 60,
+                    CostoPromedio = 18.5000m
                 }
             };
             context.Productos.AddRange(productos);
             context.SaveChanges();
 
-            // 7. Movimientos y Kárdex iniciales
-            var movInicial = new Movimiento
+            // 10. Órdenes de Compra Iniciales (CU-06)
+            var oc1 = new OrdenCompra
             {
-                Tipo = TipoMovimiento.Entrada,
-                Fecha = DateTime.Now.AddDays(-10),
-                DocumentoReferencia = "FAC-E001-000452",
-                ProveedorId = proveedores[0].Id,
-                Motivo = "Carga inicial de inventario - Apertura de Almacén",
-                Usuario = "Administrador",
-                MontoTotal = 3180.00m
+                NumeroOrden = "OC-2026-0001",
+                ProveedorId = prov1.Id,
+                UsuarioId = userAdmin.Id,
+                FechaEmision = DateTime.Now.AddDays(-5),
+                FechaEsperada = DateTime.Now.AddDays(-3),
+                Estado = "Recibida",
+                MontoTotal = 3180.00m,
+                Observaciones = "Reposición urgente de Cemento Portland Extraforte"
             };
-            context.Movimientos.Add(movInicial);
+
+            var oc2 = new OrdenCompra
+            {
+                NumeroOrden = "OC-2026-0002",
+                ProveedorId = prov3.Id,
+                UsuarioId = userAdmin.Id,
+                FechaEmision = DateTime.Now.AddDays(-1),
+                FechaEsperada = DateTime.Now.AddDays(2),
+                Estado = "Aprobada",
+                MontoTotal = 850.00m,
+                Observaciones = "Tuberías PVC de reposición por quiebre de stock mínimo"
+            };
+
+            context.OrdenesCompra.AddRange(oc1, oc2);
             context.SaveChanges();
 
-            // Kárdex de los productos
-            foreach (var prod in productos)
+            context.DetallesOrdenCompra.AddRange(
+                new DetalleOrdenCompra { OrdenCompraId = oc1.Id, ProductoId = productos[0].Id, Cantidad = 120, PrecioUnitario = 26.50m },
+                new DetalleOrdenCompra { OrdenCompraId = oc2.Id, ProductoId = productos[3].Id, Cantidad = 100, PrecioUnitario = 8.50m }
+            );
+            context.SaveChanges();
+
+            // 11. Movimiento Inicial y Kárdex (Entrada inicial trazable)
+            var mov1 = new Movimiento
             {
-                context.Kardex.Add(new Kardex
-                {
-                    ProductoId = prod.Id,
-                    Fecha = DateTime.Now.AddDays(-10),
-                    Operacion = "Inventario Inicial",
-                    DocumentoRef = "INV-001",
-                    CantidadEntrada = prod.StockActual,
-                    CostoEntrada = prod.CostoPromedio,
-                    TotalEntrada = prod.StockActual * prod.CostoPromedio,
-                    CantidadSalida = 0,
-                    CostoSalida = 0,
-                    TotalSalida = 0,
-                    SaldoCantidad = prod.StockActual,
-                    CostoPromedio = prod.CostoPromedio,
-                    SaldoTotal = prod.StockActual * prod.CostoPromedio
-                });
-            }
+                Tipo = TipoMovimiento.Entrada,
+                Fecha = DateTime.Now.AddDays(-3),
+                DocumentoReferencia = "F001-000452",
+                Motivo = "Recepción de OC-2026-0001",
+                UsuarioId = userAlmacen.Id,
+                ProveedorId = prov1.Id,
+                OrdenCompraId = oc1.Id,
+                MontoTotal = 3180.00m
+            };
+            context.Movimientos.Add(mov1);
+            context.SaveChanges();
+
+            context.DetallesMovimiento.Add(new DetalleMovimiento
+            {
+                MovimientoId = mov1.Id,
+                ProductoId = productos[0].Id,
+                Cantidad = 120,
+                CostoUnitario = 26.50m
+            });
+            context.SaveChanges();
+
+            // Kárdex inicial
+            var kardex1 = new Kardex
+            {
+                ProductoId = productos[0].Id,
+                Fecha = DateTime.Now.AddDays(-3),
+                Operacion = "Entrada / Compra Inicial",
+                DocumentoRef = "F001-000452",
+                CantidadEntrada = 120,
+                CostoEntrada = 26.50m,
+                TotalEntrada = 3180.00m,
+                CantidadSalida = 0,
+                CostoSalida = 0,
+                TotalSalida = 0,
+                SaldoCantidad = 120,
+                CostoPromedio = 26.5000m,
+                SaldoTotal = 3180.00m
+            };
+
+            var kardex2 = new Kardex
+            {
+                ProductoId = productos[1].Id,
+                Fecha = DateTime.Now.AddDays(-3),
+                Operacion = "Saldo Inicial de Inventario",
+                DocumentoRef = "SALDO-INIC",
+                CantidadEntrada = 85,
+                CostoEntrada = 38.00m,
+                TotalEntrada = 3230.00m,
+                SaldoCantidad = 85,
+                CostoPromedio = 38.0000m,
+                SaldoTotal = 3230.00m
+            };
+
+            var kardex3 = new Kardex
+            {
+                ProductoId = productos[3].Id,
+                Fecha = DateTime.Now.AddDays(-3),
+                Operacion = "Saldo Inicial de Inventario",
+                DocumentoRef = "SALDO-INIC",
+                CantidadEntrada = 4,
+                CostoEntrada = 8.50m,
+                TotalEntrada = 34.00m,
+                SaldoCantidad = 4,
+                CostoPromedio = 8.5000m,
+                SaldoTotal = 34.00m
+            };
+
+            context.Kardex.AddRange(kardex1, kardex2, kardex3);
+            context.SaveChanges();
+
+            // 12. Auditoría Inicial
+            context.Auditorias.Add(new Auditoria
+            {
+                UsuarioId = userAdmin.Id,
+                UsuarioEmail = userAdmin.Email,
+                Accion = "INICIALIZACION",
+                TablaAfectada = "Sistema",
+                RegistroId = null,
+                Detalles = "Inicialización exitosa del sistema FerreAlmacén con seguridad PBKDF2 y almacén en Ventanilla.",
+                DireccionIP = "127.0.0.1",
+                Fecha = DateTime.Now
+            });
             context.SaveChanges();
         }
     }

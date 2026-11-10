@@ -5,14 +5,15 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
-        <h2 class="h3 fw-bold text-dark mb-1">
-            <i class="bi bi-clock-history text-secondary me-2"></i>Historial de Movimientos
+        <h2 class="h4 fw-bold text-dark mb-1">
+            Historial de Movimientos
         </h2>
-        <p class="text-muted mb-0">Registro y trazabilidad de todas las operaciones de entrada y salida realizadas en el almacén.</p>
+        <p class="text-muted small mb-0">Registro y trazabilidad de todas las operaciones de entrada, salida y ajustes de inventario realizadas en el almacén.</p>
     </div>
     <div class="d-flex gap-2">
-        <a asp-action="Entrada" class="btn btn-sm btn-success"><i class="bi bi-box-arrow-in-down"></i> Entrada</a>
-        <a asp-action="Salida" class="btn btn-sm btn-danger"><i class="bi bi-box-arrow-up-right"></i> Salida</a>
+        <a asp-action="Entrada" class="btn btn-sm btn-success">Entrada</a>
+        <a asp-action="Salida" class="btn btn-sm btn-danger">Salida</a>
+        <a asp-action="Ajuste" class="btn btn-sm btn-warning text-dark">Ajuste Físico</a>
     </div>
 </div>
 
@@ -25,8 +26,8 @@
                     <th>Tipo</th>
                     <th>Fecha y Hora</th>
                     <th>Documento Ref.</th>
-                    <th>Proveedor / Detalle</th>
-                    <th>Usuario</th>
+                    <th>Proveedor / Motivo</th>
+                    <th>Usuario Responsable</th>
                     <th class="text-end">Monto Total</th>
                     <th class="text-center">Artículos</th>
                 </tr>
@@ -39,24 +40,28 @@
                         <tr>
                             <td class="fw-bold text-muted">#@m.Id.ToString("00000")</td>
                             <td>
-                                <span class="badge @(m.Tipo == FerreteriaWeb.Models.TipoMovimiento.Entrada ? "bg-success" : "bg-danger")">
-                                    <i class="bi @(m.Tipo == FerreteriaWeb.Models.TipoMovimiento.Entrada ? "bi-box-arrow-in-down" : "bi-box-arrow-up-right") me-1"></i>
-                                    @m.Tipo
-                                </span>
-                            </td>
-                            <td>@m.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td class="fw-semibold text-dark">@m.DocumentoReferencia</td>
-                            <td>
-                                <div>@(m.Proveedor?.RazonSocial ?? m.Motivo ?? "Sin especificar")</div>
-                                @if (m.Proveedor != null && !string.IsNullOrEmpty(m.Motivo))
+                                @if (m.Tipo == FerreteriaWeb.Models.TipoMovimiento.Entrada)
                                 {
-                                    <small class="text-muted">@m.Motivo</small>
+                                    <span class="badge bg-success">Entrada</span>
+                                }
+                                else if (m.Tipo == FerreteriaWeb.Models.TipoMovimiento.Salida)
+                                {
+                                    <span class="badge bg-danger">Salida</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">Ajuste Físico</span>
                                 }
                             </td>
-                            <td><span class="badge bg-light text-dark border">@m.Usuario</span></td>
-                            <td class="text-end fw-bold text-dark">S/ @m.MontoTotal.ToString("N2")</td>
+                            <td>@m.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="fw-semibold">@m.DocumentoReferencia</td>
+                            <td>@(m.Proveedor?.RazonSocial ?? m.Motivo)</td>
+                            <td>@(m.Usuario?.NombreCompleto ?? "Sistema")</td>
+                            <td class="text-end fw-bold">S/ @m.MontoTotal.ToString("N2")</td>
                             <td class="text-center">
-                                <span class="badge bg-secondary rounded-pill">@m.Detalles.Count item(s)</span>
+                                <span class="badge bg-light text-dark border">
+                                    @m.Detalles.Count
+                                </span>
                             </td>
                         </tr>
                     }
@@ -64,7 +69,9 @@
                 else
                 {
                     <tr>
-                        <td colspan="8" class="text-center py-5 text-muted">No se registran movimientos.</td>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            No se registran movimientos de inventario.
+                        </td>
                     </tr>
                 }
             </tbody>

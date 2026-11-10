@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +7,7 @@ using FerreteriaWeb.Models;
 
 namespace FerreteriaWeb.Controllers
 {
+    [Authorize]
     public class ProductosController : Controller
     {
         private readonly FerreteriaDbContext _context;

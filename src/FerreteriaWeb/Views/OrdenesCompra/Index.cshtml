@@ -1,0 +1,95 @@
+@model IEnumerable<FerreteriaWeb.Models.OrdenCompra>
+@{
+    ViewData["Title"] = "Gestión de Órdenes de Compra";
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h3 class="h4 fw-bold mb-1 text-dark">
+            Órdenes de Compra a Proveedores
+        </h3>
+        <p class="text-secondary small mb-0">
+            Administración del flujo de abastecimiento formal, reposición por stock mínimo y control de proveedores.
+        </p>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-brand">
+            Nueva Orden de Compra
+        </a>
+    </div>
+</div>
+
+<div class="card card-custom border-0 shadow-sm overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover table-custom align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>N.° Orden</th>
+                    <th>Proveedor</th>
+                    <th>Emisión</th>
+                    <th>Entrega Esperada</th>
+                    <th>Generada Por</th>
+                    <th class="text-end">Monto Total</th>
+                    <th class="text-center">Estado</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            No hay órdenes de compra registradas.
+                        </td>
+                    </tr>
+                }
+                @foreach (var oc in Model)
+                {
+                    <tr>
+                        <td>
+                            <strong class="text-dark">@oc.NumeroOrden</strong>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">@oc.Proveedor?.RazonSocial</div>
+                            <span class="text-muted small">RUC: @oc.Proveedor?.Ruc</span>
+                        </td>
+                        <td>@oc.FechaEmision.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@(oc.FechaEsperada?.ToString("dd/MM/yyyy") ?? "No fijada")</td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                @(oc.Usuario?.NombreCompleto ?? "Administrador")
+                            </span>
+                        </td>
+                        <td class="text-end fw-bold text-dark">S/ @oc.MontoTotal.ToString("N2")</td>
+                        <td class="text-center">
+                            @if (oc.Estado == "Pendiente")
+                            {
+                                <span class="badge bg-warning text-dark">Pendiente</span>
+                            }
+                            else if (oc.Estado == "Aprobada")
+                            {
+                                <span class="badge bg-info text-dark">Aprobada</span>
+                            }
+                            else if (oc.Estado == "Recibida")
+                            {
+                                <span class="badge bg-success">Recibida</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">@oc.Estado</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <a asp-action="Details" asp-route-id="@oc.Id" class="btn btn-sm btn-outline-secondary">
+                                Ver Detalle
+                            </a>
+                            <a asp-action="Imprimir" asp-route-id="@oc.Id" target="_blank" class="btn btn-sm btn-outline-primary">
+                                Imprimir / PDF
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

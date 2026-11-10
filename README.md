@@ -1,4 +1,4 @@
-## 💻 Instrucciones para Ejecutar Localmente
+## Instrucciones para Ejecutar Localmente
 
 ### Requisitos previos:
 - [.NET SDK 8.0 o superior](https://dotnet.microsoft.com/download) instalado.

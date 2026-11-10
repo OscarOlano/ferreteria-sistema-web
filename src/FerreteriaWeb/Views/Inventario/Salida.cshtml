@@ -1,4 +1,4 @@
-@model FerreteriaWeb.Services.RegistrarSalidaDto
+@model FerreteriaWeb.Models.RegistrarSalidaDto
 @{
     ViewData["Title"] = "Registrar Salida de Mercadería";
     var productos = (IEnumerable<dynamic>)ViewBag.ProductosJson;
@@ -9,11 +9,11 @@
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
             <div>
                 <h3 class="fw-bold text-dark mb-0">
-                    <i class="bi bi-box-arrow-up-right text-danger me-2"></i>Despacho / Salida de Mercadería
+                    Despacho / Salida de Mercadería
                 </h3>
-                <small class="text-muted">Descuenta el stock inmediatamente y valida existencias para evitar inventario negativo.</small>
+                <small class="text-muted">Descuenta el stock inmediatamente y valida existencias bajo control de concurrencia para evitar inventario negativo.</small>
             </div>
-            <a asp-action="Movimientos" class="btn btn-outline-secondary"><i class="bi bi-clock-history"></i> Historial</a>
+            <a asp-action="Movimientos" class="btn btn-outline-secondary">Historial</a>
         </div>
 
         <form asp-action="Salida" method="post" id="formSalida">
@@ -31,7 +31,6 @@
                             <option value="Consumo Interno">Consumo Interno de la Empresa</option>
                             <option value="Merma o Deterioro">Merma o Deterioro</option>
                             <option value="Devolución a Proveedor">Devolución a Proveedor</option>
-                            <option value="Ajuste por Conteo Físico">Ajuste por Conteo Físico</option>
                         </select>
                     </div>
 
@@ -42,12 +41,12 @@
 
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Usuario Responsable</label>
-                        <input asp-for="Usuario" class="form-control bg-light" value="Almacenero" readonly />
+                        <input class="form-control bg-light" value="@(User.Identity?.Name ?? "Almacenero")" readonly />
                     </div>
 
                     <div class="col-12">
                         <label class="form-label fw-semibold">Observaciones / Cliente</label>
-                        <input asp-for="Motivo" class="form-control" placeholder="Ej. Despacho para obra Señor Juan Pérez / Contratista" />
+                        <input asp-for="Motivo" class="form-control" placeholder="Ej. Despacho para obra Señor Juan Pérez / Contratista en Ventanilla" />
                     </div>
                 </div>
             </div>
@@ -57,7 +56,7 @@
                 <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
                     <h5 class="fw-bold text-dark mb-0">2. Artículos a Retirar</h5>
                     <button type="button" class="btn btn-sm btn-outline-danger" id="btnAgregarFila">
-                        <i class="bi bi-plus-circle me-1"></i> Agregar Artículo
+                        + Agregar Artículo
                     </button>
                 </div>
 
@@ -89,7 +88,7 @@
                                     <input type="number" name="Items[0].Cantidad" class="form-control text-center input-cantidad" step="0.01" min="0.01" value="1" required />
                                 </td>
                                 <td class="text-center">
-                                    <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-fila"><i class="bi bi-trash"></i></button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-fila">Quitar</button>
                                 </td>
                             </tr>
                         </tbody>
@@ -99,8 +98,8 @@
 
             <div class="text-end">
                 <a asp-action="Movimientos" class="btn btn-outline-secondary me-2">Cancelar</a>
-                <button type="submit" class="btn btn-danger px-5 py-2 fw-semibold">
-                    <i class="bi bi-check2-circle me-1"></i> Confirmar Salida de Almacén
+                <button type="submit" class="btn btn-danger px-4 py-2 fw-semibold">
+                    Confirmar Salida de Almacén
                 </button>
             </div>
         </form>
@@ -134,7 +133,7 @@
                 <input type="number" name="Items[${contadorFilas}].Cantidad" class="form-control text-center input-cantidad" step="0.01" min="0.01" value="1" required />
             </td>
             <td class="text-center">
-                <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-fila"><i class="bi bi-trash"></i></button>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-fila">Quitar</button>
             </td>
         `;
         contenedor.appendChild(nuevaFila);

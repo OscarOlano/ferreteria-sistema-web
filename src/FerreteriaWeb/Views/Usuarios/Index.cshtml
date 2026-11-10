@@ -1,0 +1,80 @@
+@model IEnumerable<FerreteriaWeb.Models.Usuario>
+@{
+    ViewData["Title"] = "Gestión de Usuarios y Roles";
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h3 class="h4 fw-bold mb-1 text-dark">
+            Usuarios y Roles del Sistema (RBAC)
+        </h3>
+        <p class="text-secondary small mb-0">
+            Control de cuentas institucionales con contraseñas cifradas mediante PBKDF2 y asignación de privilegios de acceso.
+        </p>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-brand">
+            Nuevo Usuario
+        </a>
+    </div>
+</div>
+
+<div class="card card-custom border-0 shadow-sm overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover table-custom align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Correo Electrónico</th>
+                    <th>Rol Asignado</th>
+                    <th>Seguridad Contraseña</th>
+                    <th class="text-center">Estado</th>
+                    <th>Fecha Alta</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dark">@user.NombreCompleto</div>
+                        </td>
+                        <td>
+                            <span class="text-muted">@user.Email</span>
+                        </td>
+                        <td>
+                            @if (user.Rol?.Nombre == "Administrador")
+                            {
+                                <span class="badge bg-primary px-3 py-2">Administrador</span>
+                            }
+                            else if (user.Rol?.Nombre == "Almacenero")
+                            {
+                                <span class="badge bg-warning text-dark px-3 py-2">Almacenero</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success px-3 py-2">Vendedor</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-secondary border font-monospace small">
+                                PBKDF2-SHA256 (10,000 iters)
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            @if (user.Activo)
+                            {
+                                <span class="badge bg-success px-2 py-1">Activo</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary px-2 py-1">Inactivo</span>
+                            }
+                        </td>
+                        <td class="text-muted small">@user.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -7,12 +7,12 @@
     <div class="col-12 col-lg-8">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h3 class="fw-bold text-dark mb-0"><i class="bi bi-info-circle text-info me-2"></i>Ficha Técnica del Producto</h3>
+                <h3 class="h4 fw-bold text-dark mb-0">Ficha Técnica del Producto</h3>
                 <small class="text-muted">Información detallada, parámetros de stock y valorización.</small>
             </div>
             <div class="d-flex gap-2">
-                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary"><i class="bi bi-pencil"></i> Editar</a>
-                <a asp-controller="Inventario" asp-action="Kardex" asp-route-productoId="@Model.Id" class="btn btn-warning"><i class="bi bi-journal-text"></i> Ver Kárdex</a>
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
+                <a asp-controller="Inventario" asp-action="Kardex" asp-route-productoId="@Model.Id" class="btn btn-warning">Ver Kárdex</a>
                 <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
             </div>
         </div>
@@ -22,7 +22,7 @@
                 <div>
                     <span class="badge bg-secondary mb-1">@Model.Codigo</span>
                     <h4 class="fw-bold text-dark mb-1">@Model.Descripcion</h4>
-                    <span class="text-muted"><i class="bi bi-upc-scan"></i> Código de Barras: @(Model.CodigoBarras ?? "No asignado")</span>
+                    <span class="text-muted">Código de Barras: @(Model.CodigoBarras ?? "No asignado")</span>
                 </div>
                 <div class="text-end">
                     <span class="badge @(Model.StockActual <= Model.StockMinimo ? "bg-warning text-dark" : "bg-success") fs-5 px-3 py-2">
@@ -48,7 +48,7 @@
                 <div class="col-sm-6 col-md-4">
                     <span class="text-muted small">Ubicación en Almacén</span>
                     <div class="fw-semibold text-primary">
-                        <i class="bi bi-geo-alt"></i> @(Model.Ubicacion?.CodigoCompleto ?? "Sin ubicación")
+                        @(Model.Ubicacion?.CodigoCompleto ?? "Sin ubicación")
                     </div>
                 </div>
                 <div class="col-sm-6 col-md-4">

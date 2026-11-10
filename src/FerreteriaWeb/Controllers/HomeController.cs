@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using FerreteriaWeb.Services;
 
 namespace FerreteriaWeb.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly IInventarioService _inventarioService;
@@ -23,6 +25,7 @@ namespace FerreteriaWeb.Controllers
             return View();
         }
 
+        [AllowAnonymous]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

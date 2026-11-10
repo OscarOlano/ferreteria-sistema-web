@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FerreteriaWeb.Data;
@@ -5,6 +6,7 @@ using FerreteriaWeb.Models;
 
 namespace FerreteriaWeb.Controllers
 {
+    [Authorize]
     public class ProveedoresController : Controller
     {
         private readonly FerreteriaDbContext _context;

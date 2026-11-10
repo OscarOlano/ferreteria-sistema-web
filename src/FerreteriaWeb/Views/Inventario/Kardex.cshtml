@@ -6,34 +6,34 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
-        <h2 class="h3 fw-bold text-dark mb-1">
-            <i class="bi bi-journal-text text-warning me-2"></i>Kárdex Valorizado
+        <h2 class="h4 fw-bold text-dark mb-1">
+            Kárdex Valorizado
         </h2>
-        <p class="text-muted mb-0">Control permanente de existencias valorizadas mediante el método de <strong>Costo Promedio Ponderado</strong> (formato SUNAT).</p>
+        <p class="text-muted small mb-0">Control permanente de existencias valorizadas mediante el método de <strong>Costo Promedio Ponderado</strong> (formato SUNAT).</p>
     </div>
-    <button onclick="window.print();" class="btn btn-outline-secondary d-flex align-items-center gap-2">
-        <i class="bi bi-printer"></i> Imprimir Reporte
+    <button onclick="window.print();" class="btn btn-outline-secondary">
+        Imprimir Reporte
     </button>
 </div>
 
 <!-- Filtros de Producto y Fecha -->
-<div class="card card-custom p-4 mb-4">
+<div class="card card-custom p-3 mb-4">
     <form method="get" class="row g-3 align-items-end">
         <div class="col-12 col-md-5">
-            <label class="form-label fw-semibold">Seleccionar Producto</label>
-            <select name="productoId" class="form-select" asp-items="ViewBag.ProductoId" onchange="this.form.submit()">
+            <label class="form-label fw-semibold small">Seleccionar Producto</label>
+            <select name="productoId" class="form-select form-select-sm" asp-items="ViewBag.ProductoId" onchange="this.form.submit()">
             </select>
         </div>
         <div class="col-12 col-sm-6 col-md-3">
-            <label class="form-label fw-semibold">Fecha Desde</label>
-            <input type="date" name="desde" value="@ViewBag.Desde" class="form-control" />
+            <label class="form-label fw-semibold small">Fecha Desde</label>
+            <input type="date" name="desde" value="@ViewBag.Desde" class="form-control form-control-sm" />
         </div>
         <div class="col-12 col-sm-6 col-md-3">
-            <label class="form-label fw-semibold">Fecha Hasta</label>
-            <input type="date" name="hasta" value="@ViewBag.Hasta" class="form-control" />
+            <label class="form-label fw-semibold small">Fecha Hasta</label>
+            <input type="date" name="hasta" value="@ViewBag.Hasta" class="form-control form-control-sm" />
         </div>
         <div class="col-12 col-md-1">
-            <button type="submit" class="btn btn-dark w-100 fw-semibold"><i class="bi bi-filter"></i></button>
+            <button type="submit" class="btn btn-dark btn-sm w-100 fw-semibold">Filtrar</button>
         </div>
     </form>
 </div>
@@ -61,29 +61,31 @@
         </div>
     </div>
 
-    <!-- Tabla Kárdex Estándar -->
-    <div class="card card-custom">
+    <!-- Tabla Kárdex Valorizado Estilo SUNAT 13.1 -->
+    <div class="card card-custom overflow-hidden">
         <div class="table-responsive">
-            <table class="table table-bordered table-sm text-center align-middle mb-0" style="font-size: 0.85rem;">
+            <table class="table table-bordered table-sm table-hover mb-0 text-center align-middle" style="font-size: 0.85rem;">
                 <thead class="table-dark">
                     <tr>
-                        <th rowspan="2" class="align-middle" style="width: 10%;">Fecha</th>
-                        <th rowspan="2" class="align-middle" style="width: 15%;">Tipo / Operación</th>
-                        <th rowspan="2" class="align-middle" style="width: 12%;">N.° Documento</th>
-                        <th colspan="3" class="bg-success text-white py-1">ENTRADAS</th>
-                        <th colspan="3" class="bg-danger text-white py-1">SALIDAS</th>
-                        <th colspan="3" class="bg-primary text-white py-1">SALDOS EN EXISTENCIA</th>
+                        <th rowspan="2" class="align-middle">Fecha</th>
+                        <th rowspan="2" class="align-middle">Operación</th>
+                        <th rowspan="2" class="align-middle">Comprobante</th>
+                        <th colspan="3" class="bg-success text-white border-bottom-0">Entradas</th>
+                        <th colspan="3" class="bg-danger text-white border-bottom-0">Salidas</th>
+                        <th colspan="3" class="bg-primary text-white border-bottom-0">Saldo Final</th>
                     </tr>
-                    <tr class="table-light text-muted small">
-                        <th>Cant.</th>
-                        <th>C. Unit.</th>
-                        <th>Total (S/)</th>
-                        <th>Cant.</th>
-                        <th>C. Unit.</th>
-                        <th>Total (S/)</th>
-                        <th>Cant.</th>
-                        <th>C. Prom.</th>
-                        <th>Saldo (S/)</th>
+                    <tr>
+                        <th class="bg-success text-white">Cant.</th>
+                        <th class="bg-success text-white">C. Unit</th>
+                        <th class="bg-success text-white">Total</th>
+
+                        <th class="bg-danger text-white">Cant.</th>
+                        <th class="bg-danger text-white">C. Unit</th>
+                        <th class="bg-danger text-white">Total</th>
+
+                        <th class="bg-primary text-white">Cant.</th>
+                        <th class="bg-primary text-white">C. Prom</th>
+                        <th class="bg-primary text-white">Total</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -92,31 +94,37 @@
                         @foreach (var k in Model)
                         {
                             <tr>
-                                <td>@k.Fecha.ToString("dd/MM/yyyy")</td>
-                                <td class="text-start ps-2">@k.Operacion</td>
-                                <td>@k.DocumentoRef</td>
+                                <td class="text-nowrap">@k.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <span class="badge @(k.Operacion.Contains("Entrada") ? "bg-success" : (k.Operacion.Contains("Salida") ? "bg-danger" : "bg-warning text-dark"))">
+                                        @k.Operacion
+                                    </span>
+                                </td>
+                                <td class="fw-semibold">@k.DocumentoRef</td>
 
                                 <!-- Entradas -->
-                                <td class="text-success fw-semibold">@(k.CantidadEntrada > 0 ? k.CantidadEntrada.ToString("G29") : "-")</td>
-                                <td class="text-muted">@(k.CostoEntrada > 0 ? "S/ " + k.CostoEntrada.ToString("N2") : "-")</td>
-                                <td class="text-success">@(k.TotalEntrada > 0 ? "S/ " + k.TotalEntrada.ToString("N2") : "-")</td>
+                                <td class="table-success">@(k.CantidadEntrada > 0 ? k.CantidadEntrada.ToString("G29") : "-")</td>
+                                <td class="table-success">@(k.CantidadEntrada > 0 ? "S/ " + k.CostoEntrada.ToString("N2") : "-")</td>
+                                <td class="table-success fw-bold">@(k.TotalEntrada > 0 ? "S/ " + k.TotalEntrada.ToString("N2") : "-")</td>
 
                                 <!-- Salidas -->
-                                <td class="text-danger fw-semibold">@(k.CantidadSalida > 0 ? k.CantidadSalida.ToString("G29") : "-")</td>
-                                <td class="text-muted">@(k.CostoSalida > 0 ? "S/ " + k.CostoSalida.ToString("N2") : "-")</td>
-                                <td class="text-danger">@(k.TotalSalida > 0 ? "S/ " + k.TotalSalida.ToString("N2") : "-")</td>
+                                <td class="table-danger">@(k.CantidadSalida > 0 ? k.CantidadSalida.ToString("G29") : "-")</td>
+                                <td class="table-danger">@(k.CantidadSalida > 0 ? "S/ " + k.CostoSalida.ToString("N2") : "-")</td>
+                                <td class="table-danger fw-bold">@(k.TotalSalida > 0 ? "S/ " + k.TotalSalida.ToString("N2") : "-")</td>
 
-                                <!-- Saldos -->
-                                <td class="fw-bold text-dark bg-light">@k.SaldoCantidad.ToString("G29")</td>
-                                <td class="text-primary bg-light">S/ @k.CostoPromedio.ToString("N4")</td>
-                                <td class="fw-bold text-primary bg-light">S/ @k.SaldoTotal.ToString("N2")</td>
+                                <!-- Saldo Final -->
+                                <td class="table-primary fw-bold">@k.SaldoCantidad.ToString("G29")</td>
+                                <td class="table-primary">S/ @k.CostoPromedio.ToString("N4")</td>
+                                <td class="table-primary fw-bold text-dark">S/ @k.SaldoTotal.ToString("N2")</td>
                             </tr>
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="12" class="py-4 text-muted">No se registran movimientos en el kárdex para este rango.</td>
+                            <td colspan="12" class="text-center py-4 text-muted">
+                                No se encontraron registros de kárdex para los filtros aplicados.
+                            </td>
                         </tr>
                     }
                 </tbody>

@@ -1,0 +1,23 @@
+@{
+    ViewData["Title"] = "Acceso Denegado";
+}
+
+<div class="row justify-content-center py-5">
+    <div class="col-md-6 text-center">
+        <div class="card card-custom p-5 border-0 shadow-sm">
+            <div class="display-3 mb-3">⚠️</div>
+            <h2 class="h4 fw-bold mb-2">Acceso No Autorizado</h2>
+            <p class="text-secondary small mb-4">
+                Su rol de usuario actual no dispone de los privilegios necesarios para acceder a este módulo del sistema.
+            </p>
+            <div class="d-flex justify-content-center gap-2">
+                <a asp-controller="Home" asp-action="Index" class="btn btn-brand">
+                    Ir al Panel de Control
+                </a>
+                <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-secondary">
+                    Cambiar de Usuario
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

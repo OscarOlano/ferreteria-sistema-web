@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - FerreAlmacén | Ferretería El Constructor</title>
+    <title>@ViewData["Title"] - FerreAlmacén | Ferretería El Constructor S.A.C.</title>
     
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,19 +12,17 @@
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <style>
         :root {
-            --brand-primary: #d97706; /* Ámbar ferretero */
-            --brand-dark: #1e293b;
+            --brand-primary: #d97706;
+            --brand-dark: #0f172a;
             --brand-surface: #f8fafc;
             --brand-accent: #0284c7;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: #f1f5f9;
             color: #334155;
             min-height: 100vh;
@@ -38,34 +36,32 @@
             color: #fff !important;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .brand-badge {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
+            background: #d97706;
             color: white;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 0.70rem;
+            font-weight: 600;
             text-transform: uppercase;
         }
 
         .navbar-custom {
             background-color: #0f172a;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.15);
-            padding: 0.75rem 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            padding: 0.65rem 1rem;
         }
 
         .nav-link {
             font-weight: 500;
             color: #cbd5e1 !important;
-            transition: all 0.2s ease;
+            transition: all 0.15s ease;
             border-radius: 6px;
-            padding: 0.5rem 0.85rem !important;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            padding: 0.45rem 0.7rem !important;
+            font-size: 0.90rem;
         }
 
         .nav-link:hover, .nav-link.active {
@@ -80,24 +76,19 @@
 
         .card-custom {
             border: 1px solid #e2e8f0;
-            border-radius: 12px;
+            border-radius: 8px;
             background: #ffffff;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .card-custom:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         }
 
         .btn-brand {
             background-color: #d97706;
             color: white;
             font-weight: 600;
-            border-radius: 8px;
-            padding: 0.5rem 1.25rem;
+            border-radius: 6px;
+            padding: 0.45rem 1.15rem;
             border: none;
-            transition: background 0.2s ease;
+            transition: background 0.15s ease;
         }
 
         .btn-brand:hover {
@@ -113,12 +104,12 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             border-bottom: 2px solid #e2e8f0;
-            padding: 12px 14px;
+            padding: 10px 12px;
         }
 
         .table-custom td {
             vertical-align: middle;
-            padding: 12px 14px;
+            padding: 10px 12px;
             color: #1e293b;
         }
 
@@ -126,8 +117,8 @@
             margin-top: auto;
             background-color: #0f172a;
             color: #94a3b8;
-            font-size: 0.875rem;
-            padding: 1.25rem 0;
+            font-size: 0.85rem;
+            padding: 1.15rem 0;
             border-top: 1px solid #1e293b;
         }
     </style>
@@ -135,97 +126,166 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
             <div class="container-fluid px-lg-4">
                 <a class="navbar-brand navbar-brand-custom" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-tools text-warning fs-4"></i>
                     <span>FerreAlmacén</span>
-                    <span class="brand-badge">S.A.C.</span>
+                    <span class="brand-badge">Ventanilla</span>
                 </a>
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarMain">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">
-                                <i class="bi bi-grid-1x2-fill"></i> Panel de Control
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Productos" asp-action="Index">
-                                <i class="bi bi-box-seam-fill"></i> Productos
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-arrow-left-right"></i> Movimientos
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-dark shadow">
-                                <li>
-                                    <a class="dropdown-item py-2" asp-controller="Inventario" asp-action="Entrada">
-                                        <i class="bi bi-box-arrow-in-down text-success me-2"></i> Registrar Entrada (Compra)
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Home" asp-action="Index">
+                                    Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Productos" asp-action="Index">
+                                    Catálogo
+                                </a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    Movimientos
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-dark shadow">
+                                    <li>
+                                        <a class="dropdown-item py-2" asp-controller="Inventario" asp-action="Entrada">
+                                            Recepción / Entrada
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2" asp-controller="Inventario" asp-action="Salida">
+                                            Despacho / Salida
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2" asp-controller="Inventario" asp-action="Ajuste">
+                                            Ajuste de Inventario
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item py-2" asp-controller="Inventario" asp-action="Movimientos">
+                                            Historial de Movimientos
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="OrdenesCompra" asp-action="Index">
+                                    Órdenes de Compra
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Inventario" asp-action="Kardex">
+                                    Kárdex Valorizado
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Inventario" asp-action="Alertas">
+                                    ⚠️ Alertas
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Proveedores" asp-action="Index">
+                                    Proveedores
+                                </a>
+                            </li>
+                            @if (User.IsInRole("Administrador"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                        Administración
                                     </a>
+                                    <ul class="dropdown-menu dropdown-menu-dark shadow">
+                                        <li>
+                                            <a class="dropdown-item py-2" asp-controller="Usuarios" asp-action="Index">
+                                                Usuarios y Roles
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2" asp-controller="Auditoria" asp-action="Index">
+                                                Bitácora de Auditoría
+                                            </a>
+                                        </li>
+                                    </ul>
                                 </li>
-                                <li>
-                                    <a class="dropdown-item py-2" asp-controller="Inventario" asp-action="Salida">
-                                        <i class="bi bi-box-arrow-up-right text-danger me-2"></i> Registrar Salida (Despacho)
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item py-2" asp-controller="Inventario" asp-action="Movimientos">
-                                        <i class="bi bi-clock-history me-2"></i> Historial de Movimientos
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Inventario" asp-action="Kardex">
-                                <i class="bi bi-journal-text"></i> Kárdex Valorizado
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Inventario" asp-action="Alertas">
-                                <i class="bi bi-exclamation-triangle-fill text-warning"></i> Alertas de Stock
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Proveedores" asp-action="Index">
-                                <i class="bi bi-truck"></i> Proveedores
-                            </a>
-                        </li>
-                    </ul>
+                            }
+                        </ul>
 
-                    <div class="d-flex align-items-center gap-3 text-light">
-                        <span class="badge bg-warning text-dark px-3 py-2 fw-semibold">
-                            <i class="bi bi-person-check-fill me-1"></i> Admin: Oscar Olano
-                        </span>
-                    </div>
+                        <!-- Datos de Sesión Activa -->
+                        <div class="d-flex align-items-center gap-3 text-light ms-auto">
+                            @{
+                                var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Usuario";
+                                var badgeClass = userRole switch
+                                {
+                                    "Administrador" => "bg-primary text-white",
+                                    "Almacenero" => "bg-warning text-dark",
+                                    "Vendedor" => "bg-success text-white",
+                                    _ => "bg-secondary text-white"
+                                };
+                            }
+                            <div class="text-end d-none d-md-block">
+                                <div class="fw-semibold text-white small">@User.Identity.Name</div>
+                                <span class="badge @badgeClass py-1 px-2" style="font-size: 0.72rem;">@userRole</span>
+                            </div>
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-light" title="Cerrar Sesión">
+                                    Cerrar sesión
+                                </button>
+                            </form>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="ms-auto">
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-sm btn-brand">
+                                Iniciar Sesión
+                            </a>
+                        </div>
+                    }
                 </div>
             </div>
         </nav>
     </header>
 
     <main class="container-fluid px-lg-4 py-4">
-        @if (TempData["Mensaje"] != null)
+        <!-- Notificaciones de Éxito / Alerta -->
+        @if (TempData["SuccessMessage"] != null || TempData["Mensaje"] != null)
         {
+            var msg = TempData["SuccessMessage"] ?? TempData["Mensaje"];
             <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 d-flex align-items-center gap-2 mb-4" role="alert">
-                <i class="bi bi-check-circle-fill fs-5"></i>
-                <div>@TempData["Mensaje"]</div>
+                <div>@msg</div>
                 <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
             </div>
         }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 d-flex align-items-center gap-2 mb-4" role="alert">
+                <span class="fs-5">⚠️</span>
+                <div>@TempData["ErrorMessage"]</div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
         @RenderBody()
     </main>
 
     <footer>
         <div class="container-fluid px-lg-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
             <div>
-                <strong>FerreAlmacén v1.0</strong> — Sistema de Gestión de Almacén e Inventario | <em>Ferretería El Constructor S.A.C.</em>
+                <strong>FerreAlmacén</strong> — Sistema de Gestión de Almacén e Inventario | <em>Ferretería El Constructor S.A.C.</em>
+                <span class="d-block d-md-inline ms-md-2 text-warning small">&bull; Sede Operativa: Av. Néstor Gambetta Km 14.5, Ventanilla, Callao</span>
             </div>
             <div class="text-secondary small">
-                Proyecto de Diseño y Arquitectura de Software (DIARS) &bull; UPN 2026-2
+                Diseño y Arquitectura de Software &bull; UPN 2026-2 &bull; Grupo 4
             </div>
         </div>
     </footer>

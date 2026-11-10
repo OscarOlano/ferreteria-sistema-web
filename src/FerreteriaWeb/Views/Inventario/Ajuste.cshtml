@@ -1,0 +1,141 @@
+@model FerreteriaWeb.Models.RegistrarAjusteDto
+@{
+    ViewData["Title"] = "Ajuste de Inventario por Conteo Físico";
+    var productos = ViewBag.Productos as List<FerreteriaWeb.Models.Producto> ?? new();
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h3 class="fw-bold mb-1 text-dark">
+                    Ajuste de Inventario
+                </h3>
+                <p class="text-secondary small mb-0">
+                    Conciliación atómica de existencias entre el inventario físico auditado y el sistema con registro en Kárdex y bitácora.
+                </p>
+            </div>
+            <a asp-action="Movimientos" class="btn btn-outline-secondary btn-sm">
+                Volver a Movimientos
+            </a>
+        </div>
+
+        <div class="card card-custom p-4 border-0 shadow-sm">
+            <form asp-action="Ajuste" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label asp-for="ProductoId" class="form-label fw-semibold">Seleccionar Producto</label>
+                    <select asp-for="ProductoId" class="form-select" id="cboProducto" required onchange="actualizarInfoProducto()">
+                        <option value="">-- Seleccione un artículo --</option>
+                        @foreach (var prod in productos)
+                        {
+                            <option value="@prod.Id" data-stock="@prod.StockActual" data-costo="@prod.CostoPromedio" data-codigo="@prod.Codigo">
+                                [@prod.Codigo] @prod.Descripcion (Stock actual: @prod.StockActual)
+                            </option>
+                        }
+                    </select>
+                    <span asp-validation-for="ProductoId" class="text-danger small"></span>
+                </div>
+
+                <!-- Tarjeta de información del producto seleccionado -->
+                <div class="p-3 bg-light rounded mb-3 border d-none" id="infoProductoCard">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <span class="text-muted small d-block">Stock en Sistema</span>
+                            <span class="fw-bold fs-5 text-primary" id="lblStockSistema">0</span>
+                        </div>
+                        <div class="col-md-4">
+                            <span class="text-muted small d-block">Costo Unitario Vigente</span>
+                            <span class="fw-bold fs-5 text-dark" id="lblCostoUnitario">S/ 0.00</span>
+                        </div>
+                        <div class="col-md-4">
+                            <span class="text-muted small d-block">Diferencia Proyectada</span>
+                            <span class="fw-bold fs-5" id="lblDiferencia">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="StockFisicoReal" class="form-label fw-semibold">Stock Físico Real Auditado</label>
+                        <input asp-for="StockFisicoReal" id="txtStockFisico" type="number" step="0.01" min="0" class="form-control" required oninput="calcularDiferencia()" />
+                        <span asp-validation-for="StockFisicoReal" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="MotivoAjuste" class="form-label fw-semibold">Motivo del Ajuste</label>
+                        <select asp-for="MotivoAjuste" class="form-select" required>
+                            <option value="Conteo Físico Periódico">Conteo Físico Periódico</option>
+                            <option value="Merma por Rotura o Deterioro">Merma por Rotura o Deterioro</option>
+                            <option value="Diferencia de Recepción">Diferencia de Recepción</option>
+                            <option value="Hallazgo de Mercadería Extraviada">Hallazgo de Mercadería Extraviada</option>
+                            <option value="Corrección de Registro">Corrección de Registro</option>
+                        </select>
+                        <span asp-validation-for="MotivoAjuste" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning small d-flex align-items-center gap-2 mb-4">
+                    <span class="fs-5">⚠️</span>
+                    <div>
+                        <strong>Invariante de Inventario:</strong> El registro de este ajuste actualizará inmediatamente el stock del producto, generará un asiento en el Kárdex permanente valorizado y guardará la evidencia en la bitácora de auditoría con su usuario responsable.
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Movimientos" class="btn btn-light">Cancelar</a>
+                    <button type="submit" class="btn btn-brand px-4">
+                        Aplicar Ajuste Atómico
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function actualizarInfoProducto() {
+            var cbo = document.getElementById('cboProducto');
+            var card = document.getElementById('infoProductoCard');
+            if (cbo.selectedIndex > 0) {
+                var opt = cbo.options[cbo.selectedIndex];
+                var stock = parseFloat(opt.getAttribute('data-stock')) || 0;
+                var costo = parseFloat(opt.getAttribute('data-costo')) || 0;
+
+                document.getElementById('lblStockSistema').innerText = stock;
+                document.getElementById('lblCostoUnitario').innerText = 'S/ ' + costo.toFixed(4);
+                card.classList.remove('d-none');
+                calcularDiferencia();
+            } else {
+                card.classList.add('d-none');
+            }
+        }
+
+        function calcularDiferencia() {
+            var cbo = document.getElementById('cboProducto');
+            if (cbo.selectedIndex <= 0) return;
+            var opt = cbo.options[cbo.selectedIndex];
+            var stockSistema = parseFloat(opt.getAttribute('data-stock')) || 0;
+            var fisico = parseFloat(document.getElementById('txtStockFisico').value);
+
+            if (isNaN(fisico)) {
+                document.getElementById('lblDiferencia').innerText = '0';
+                return;
+            }
+
+            var diff = fisico - stockSistema;
+            var lbl = document.getElementById('lblDiferencia');
+            if (diff > 0) {
+                lbl.innerText = '+' + diff.toFixed(2) + ' (Sobrante)';
+                lbl.className = 'fw-bold fs-5 text-success';
+            } else if (diff < 0) {
+                lbl.innerText = diff.toFixed(2) + ' (Faltante)';
+                lbl.className = 'fw-bold fs-5 text-danger';
+            } else {
+                lbl.innerText = '0.00 (Sin variación)';
+                lbl.className = 'fw-bold fs-5 text-secondary';
+            }
+        }
+    </script>
+}
